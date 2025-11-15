@@ -2,7 +2,7 @@
 
 # 1. Create .env in backend directory.
 
-# 2. Generate ESM256 keys.
+# 2. Generate ESM256 keys **IN authentication-microservice/src**
 `
 mkdir -p keys
 openssl ecparam -name prime256v1 -genkey -noout -out keys/ec_private.pem
