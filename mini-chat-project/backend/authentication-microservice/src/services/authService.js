@@ -1,28 +1,25 @@
 import Admin from "../models/Admin";
-import { generateToken } from "../config/jwtManager";
-import { generateHash } from "../config/bcrypter";
+import { generateToken } from "../security/jwtManager";
 
-async function login(admin){
+export async function login(admin){
 
-    const foundAdmin = await Admin.findOne( {username: admin.username} ).select("+password");
+    const foundAdmin = await Admin.findOne( {username: admin.username} ).select("+password").exec();
     
     if(!foundAdmin)
-        throw new Error("Credenciales Inválidas");
+        throw new Error("Invalid Credentials");
 
-    const VALID_PASS = await foundAdmin.methods.comparePass(admin.password);
+    const valid_pass = await foundAdmin.comparePass(admin.password);
 
-    if(!VALID_PASS)
-        throw new Error("Credenciales Inválidas");
+    if(!valid_pass)
+        throw new Error("Invalid Credentials");
 
     // Correct Workflow
 
-    // const hashed_username = generateHash();
-
     const payload = {
-        admin_id: foundAdmin.id,
-        username: foundAdmin.username
+        admin_id: foundAdmin.id,        
+        username: foundAdmin.publicUsername
     }
-    const token = generateToken(PAYLOAD);
+    const token = generateToken(payload);
     return {
         success: true,
         token: token

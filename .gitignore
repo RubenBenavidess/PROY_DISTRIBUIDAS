@@ -1,14 +1,45 @@
-# .gitignore - Ignorar dependencias instaladas
-# Evita subir los node_modules de backend y frontend
-/Backend/node_modules/
-/Frontend/node_modules/
+# Node.js Dependencies
+**/node_modules/
+package-lock.json
+yarn.lock
 
-# Por si hay node_modules en la raíz
-/node_modules/
-
-# Entradas comunes útiles
+# Environment Variables (no commitear secretos)
 .env
+.env.local
+.env.*.local
+
+# Security & Keys
+keys/
+*.pem
+*.key
+
+# Build & Cache
+**/dist/
+**/build/
+**/.next/
+**/.nuxt/
+**/out/
+
+# IDE & Editor (personal)
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# IDE & Editor (temporal)
 .DS_Store
+Thumbs.db
+
+# Logs
 npm-debug.log*
+npm-error.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+*.log
+
+# Temporary Files
+.npmrc
+.nodemon.json
+*.pid
