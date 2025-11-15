@@ -1,4 +1,4 @@
-import { validateToken } from "../../security/jwtManager";
+import { validateToken } from "../../security/jwtManager.js";
 
 export default function redirectAuthenticated(req, res, next){
 

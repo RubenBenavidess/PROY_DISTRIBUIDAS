@@ -1,13 +1,13 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import connect from './config/db';
+import connect from "./config/db.js";
 
 import express from "express";
-import router from "./routes/authRouter";
+import router from "./routes/authRouter.js";
 import helmet from "helmet";
 import cors from "cors";
-import handleErrors from "./middleware/errors/errorMIddleware";
+import handleErrors from "./middleware/errors/errorMIddleware.js";
 
 // Initialization/Connection to DB
 connect();
@@ -19,7 +19,7 @@ const app = express();
 app.use(helmet());
 
 const CORS_OPTIONS = {
-    origin: 'http://localhost:3000',
+    origin: '*',
     optionsSuccessStatus: 200
 }
 app.use(cors(CORS_OPTIONS));

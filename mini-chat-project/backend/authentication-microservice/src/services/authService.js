@@ -1,5 +1,5 @@
-import Admin from "../models/Admin";
-import { generateToken } from "../security/jwtManager";
+import Admin from "../models/Admin.js";
+import { generateToken } from "../security/jwtManager.js";
 
 export async function login(admin){
 
