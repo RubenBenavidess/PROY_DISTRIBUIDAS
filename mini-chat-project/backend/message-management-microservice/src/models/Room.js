@@ -1,0 +1,40 @@
+import mongoose from "mongoose";
+
+const roomSchema = new mongoose.Schema({
+    roomId: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    pin: {
+        type: String,
+        required: true
+    },
+    type: {
+        type: String,
+        required: true,
+        enum: ['text', 'text/media']
+    },
+    sizeLimit: {
+        type: Number,
+        required: true,
+        default: 30
+    }
+}, {
+    timestamps: true
+});
+
+roomSchema.index({ type: 1, createdAt: -1 });
+roomSchema.index({ roomId: 1, type: 1 });
+
+roomSchema.methods.comparePin = function(candidatePin) {
+    return this.pin === candidatePin;
+};
+
+roomSchema.methods.canAddMore = function(currentSize) {
+    return currentSize < this.sizeLimit;
+};
+
+const Room = mongoose.model('Room', roomSchema);
+
+export default Room;
