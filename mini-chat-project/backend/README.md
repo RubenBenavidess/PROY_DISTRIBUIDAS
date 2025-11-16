@@ -10,6 +10,5 @@ openssl ec -in keys/ec_private.pem -pubout -out keys/ec_public.pem
 chmod 600 keys/ec_private.pem
 chmod 644 keys/ec_public.pem
 `
-
 # 3. Execute docker compose
 docker compose up -d --build

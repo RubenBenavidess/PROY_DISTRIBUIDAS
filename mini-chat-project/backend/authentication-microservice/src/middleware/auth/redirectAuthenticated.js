@@ -16,15 +16,12 @@ export default function redirectAuthenticated(req, res, next){
             return next();
         }
 
-        const verified = validateToken(token);
-
-        if(!verified)
-            return next();            
+        validateToken(token);   
 
         throw new Error("Forbidden Access");
 
     }catch(e){
-        return next();
+        return next(e);
     }
 
 }

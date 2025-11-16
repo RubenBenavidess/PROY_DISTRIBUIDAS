@@ -6,12 +6,12 @@ export async function login(admin){
     const foundAdmin = await Admin.findOne( {username: admin.username} ).select("+password").exec();
     
     if(!foundAdmin)
-        throw new Error("Invalid Credentials");
+        throw new Error("Invalid Credentials A");
 
     const valid_pass = await foundAdmin.comparePass(admin.password);
 
     if(!valid_pass)
-        throw new Error("Invalid Credentials");
+        throw new Error("Invalid Credentials B");
 
     // Correct Workflow
 

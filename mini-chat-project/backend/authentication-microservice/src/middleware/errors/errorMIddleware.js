@@ -2,7 +2,6 @@ import { ZodError } from "zod";
 
 export default function handleErrors(err, req, res, next){
 
-    console.log(`Error: ${err.message}`);
     console.log(err.stack);
 
     const errorResponse = {
