@@ -12,7 +12,7 @@
   align-items: center;
   padding: 1rem 1.5rem;
   background-color: var(--bg-secondary);
-  border-bottom: 1px solid var(--bg-primary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   flex-shrink: 0;
 }
 .dashboard-header h1 { 
@@ -48,16 +48,17 @@
 /* Columna 1: Lista */
 .column-list {
   flex: 0 0 360px;
-  border-right: 1px solid var(--bg-primary);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
+  background-color: var(--bg-secondary);
 }
 .list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem 1rem 1rem 1.5rem;
-  border-bottom: 1px solid var(--bg-primary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   flex-shrink: 0;
 }
 .list-header h2 {
@@ -92,7 +93,7 @@
   flex: 1;
   padding: 2rem;
   overflow-y: auto;
-  background-color: var(--bg-secondary);
+  background-color: var(--bg-primary);
 }
 
 .stats-title {

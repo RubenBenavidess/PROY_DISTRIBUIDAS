@@ -1,12 +1,13 @@
-/* Discord-Inspired Color Palette (Dark Mode) */
+/* Blue Dark Theme Color Palette */
 :root {
     /* Fondos */
-    --bg-primary: #1E1F22;      /* Fondo Principal (chat background) */
-    --bg-secondary: #2A2C30;    /* Fondo Secundario (sidebars, input background) */
-    --bg-tertiary: #36393F;     /* Fondo Terciario (other user bubbles, button hover) */
+    --bg-primary: #070f27;      /* Fondo Principal (oscuro azul) */
+    --bg-secondary: #0d1c49;    /* Fondo Secundario (azul medio oscuro) */
+    --bg-tertiary: #1a2d5f;     /* Fondo Terciario (azul medio) */
     
     /* Acentos */
-    --accent-primary: #4A59E4;  /* Acento Principal (user's bubble, send buttons) */
+    --accent-primary: #4A59E4;  /* Acento Principal (azul brillante) */
+    --accent-light: #5d6eeb;    /* Acento claro (para botones) */
     --accent-green: #23A55A;    /* Acento Verde (call button) */
     --accent-red: #F23F43;      /* Notificación (red notification dot) */
     

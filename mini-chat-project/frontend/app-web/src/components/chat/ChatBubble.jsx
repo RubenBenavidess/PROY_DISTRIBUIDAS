@@ -1,39 +1,58 @@
 import React from 'react';
-import './ChatBubble.css';
+import './ChatBubble.css'; // Vamos a cambiar este CSS
 
 /**
- * @param {object} props
- * @param {object} props.message - El objeto del mensaje
- * @param {boolean} props.isMe - Si el mensaje es mío (para el color)
+ * Genera un "avatar" placeholder con las iniciales del usuario.
  */
+const Avatar = ({ username }) => {
+  const initial = username ? username[0].toUpperCase() : '?';
+  // (Aquí podrías poner un <img> si tuvieras fotos de perfil)
+  return (
+    <div className="chat-avatar">
+      <span>{initial}</span>
+    </div>
+  );
+};
+
 export const ChatBubble = ({ message, isMe }) => {
-    const { username, content, timestamp, contentType, filename } = message;
+  const { username, content, timestamp, contentType, filename } = message;
 
-    // Formatea la hora
-    const formatTime = (ts) => {
-        return new Date(ts).toLocaleTimeString('es-EC', {
-        hour: '2-digit',
-        minute: '2-digit',
-        });
-    };
+  const formatTime = (ts) => {
+    return new Date(ts).toLocaleTimeString('es-EC', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
-    return (
-        <div className={`bubble-container ${isMe ? 'me' : 'other'}`}>
-        <div className="bubble">
-            {!isMe && <div className="bubble-username">{username}</div>}
-            
-            {/* Muestra contenido de texto o un link de archivo */}
-            {contentType === 'text' ? (
-            <div className="bubble-content">{content}</div>
-            ) : (
-            <div className="bubble-content file">
-                📎 {filename || 'Archivo'}
-                {/* Aquí iría un link de descarga si la API lo diera */}
+  // La lógica 'isMe' ahora solo cambia el orden (avatar a la izq o der)
+  return (
+    <div className={`chat-message-row ${isMe ? 'me' : 'other'}`}>
+      {!isMe && <Avatar username={username} />}
+      
+      <div className="message-content">
+        <div className="message-header">
+          {/* Añadimos el icono 👤 y el contenedor */}
+          {!isMe && (
+            <span className="user-indicator">
+              <span className="user-icon">👤</span>
+              <span className="username">{username}</span>
+            </span>
+          )}
+          <span className="timestamp">{formatTime(timestamp)}</span>
+        </div>
+        
+        <div className={`bubble ${isMe ? 'me-bubble' : 'other-bubble'}`}>
+          {contentType === 'text' ? (
+            <div className="bubble-text">{content}</div>
+          ) : (
+            <div className="bubble-text file">
+              📎 {filename || 'Archivo'}
             </div>
-            )}
-            
-            <div className="bubble-timestamp">{formatTime(timestamp)}</div>
+          )}
         </div>
-        </div>
-    );
+      </div>
+      
+      {/* (No ponemos avatar para "mí" para que se vea más limpio) */}
+    </div>
+  );
 };

@@ -29,6 +29,24 @@
   align-items: baseline;
 }
 
+.user-indicator {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.user-icon {
+  font-size: 0.8rem;
+  color: #9E9E9E; /* Gris Secundario */
+  margin-right: 4px;
+}
+
+.username {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #F5F5F5; /* Blanco (como en la foto) */
+}
+
 .username {
   font-size: 0.9rem;
   font-weight: 600;
