@@ -5,13 +5,23 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { connect } from './config/db.js';
-import { config } from './config/index.js';
-import WebSocketHandler from './websocket/socketHandler.js';
+import { initializeWebSocket } from './websocket/socketHandler.js';
 import roomRoutes from './routes/roomRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
 import handleErrors from './middleware/errors/errorMiddleware.js';
 
 dotenv.config();
+
+// Configuration object
+const config = {
+    port: process.env.PORT || 3002,
+    nodeEnv: process.env.NODE_ENV || 'development',
+    corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    rateLimit: {
+        windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 900000,
+        maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100
+    }
+};
 
 const app = express();
 const httpServer = createServer(app);
@@ -63,7 +73,7 @@ app.use((req, res) => {
 app.use(handleErrors);
 
 // Initialize WebSocket
-const wsHandler = new WebSocketHandler(httpServer);
+initializeWebSocket(httpServer);
 
 // Connect to database and start server
 const PORT = config.port;
