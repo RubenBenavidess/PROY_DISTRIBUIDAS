@@ -9,16 +9,13 @@ export default function redirectAuthenticated(req, res, next){
         let token;
         const headerValue = req.header(TOKEN_HEADER_KEY);
         if (headerValue?.startsWith("Bearer ")) {
-          token = headerValue.slice(7);
-        }
-        
-        if(!token){
-            return next();
+            token = headerValue.slice(7);
         }
 
-        validateToken(token);   
-
-        throw new Error("Forbidden Access");
+        if (validateToken(token)) {   
+            throw new Error("Forbidden Access");
+        }
+        return next();
 
     }catch(e){
         return next();
