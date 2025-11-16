@@ -1,0 +1,21 @@
+/* Basado en tu Paleta de Colores (Dark Mode) */
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    
+    /* Fondo Principal (Dark Mode) */
+    background-color: #1C1C1E; 
+
+    /* Texto Principal (Dark Mode) */
+    color: #F5F5F5; 
+
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Para que los inputs y botones hereden las fuentes */
+input, button, textarea, select {
+    font: inherit;
+}

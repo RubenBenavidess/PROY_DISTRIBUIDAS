@@ -1,0 +1,52 @@
+.bubble-container {
+    display: flex;
+    margin-bottom: 0.75rem;
+}
+
+/* Burbujas de otros (Gris) */
+.bubble-container.other {
+    justify-content: flex-start;
+}
+.bubble-container.other .bubble {
+    background-color: #3A3A3C; /* Gris Medio (Tu Spec) */
+    border-radius: 20px 20px 20px 5px;
+}
+.bubble-username {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #00C48C; /* Acento */
+    margin-bottom: 4px;
+}
+
+/* Mis burbujas (Verde) */
+.bubble-container.me {
+    justify-content: flex-end;
+}
+.bubble-container.me .bubble {
+    background-color: #00C48C; /* Verde Acento (Tu Spec) */
+    color: #FFFFFF;
+    border-radius: 20px 20px 5px 20px;
+}
+/* Oculta mi propio nombre */
+.bubble-container.me .bubble-username {
+    display: none;
+}
+
+/* Estilo general de la burbuja */
+.bubble {
+    max-width: 70%;
+    padding: 10px 16px;
+    word-wrap: break-word;
+}
+.bubble-content {
+    font-size: 0.95rem;
+}
+.bubble-content.file {
+    font-style: italic;
+}
+.bubble-timestamp {
+    font-size: 0.75rem;
+    text-align: right;
+    margin-top: 4px;
+    opacity: 0.7;
+}

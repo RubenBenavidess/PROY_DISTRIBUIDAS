@@ -1,0 +1,62 @@
+.chat-layout {
+    display: flex;
+    height: 100vh;
+}
+
+/* Columna 1: Chat */
+.chat-column {
+    flex: 1; /* Ocupa todo el ancho en móvil */
+    display: flex;
+    flex-direction: column;
+    background-color: #1C1C1E; /* Fondo Principal */
+}
+
+/* Header */
+.chat-header {
+    padding: 1rem 1.5rem;
+    background-color: #2C2C2E;
+    border-bottom: 1px solid #3A3A3C;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.chat-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+.chat-header span {
+    font-size: 0.85rem;
+    color: #9E9E9E;
+}
+.lock-icon {
+    color: #00C48C; /* Acento */
+    font-size: 0.75rem;
+}
+
+/* Cuerpo (mensajes) */
+.chat-body {
+    flex-grow: 1;
+    overflow-y: auto; /* Scroll! */
+    padding: 1.5rem;
+}
+
+/* Columna 2: Detalles (Desktop) */
+.details-column {
+    flex: 0 0 300px; /* Ancho fijo */
+    background-color: #2C2C2E;
+    border-left: 1px solid #3A3A3C;
+    padding: 1.5rem;
+    display: none; /* Oculto en móvil */
+}
+.details-column h3 {
+    margin-top: 0;
+    color: #9E9E9E;
+    font-size: 1.1rem;
+}
+
+/* Media Query para Desktop (Tu Spec) */
+@media (min-width: 768px) {
+    .details-column {
+        display: block; /* Muestra la columna de detalles */
+    }
+}

@@ -1,0 +1,29 @@
+.input-wrapper {
+    width: 100%;
+    margin-bottom: 1.25rem; /* 20px */
+}
+
+.input-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #F5F5F5; /* Texto principal (Dark Mode) */
+    margin-bottom: 8px;
+    }
+
+.minimal-input {
+    width: 100%;
+    padding: 12px 14px;
+    background-color: #2C2C2E; /* Fondo secundario (Dark) */
+    border: 1px solid #3A3A3C; /* Borde sutil */
+    border-radius: 8px;
+    color: #F5F5F5; /* Texto */
+    font-size: 1rem;
+    box-sizing: border-box; /* Importante para que el padding no dañe el ancho */
+}
+
+.minimal-input:focus {
+    outline: none;
+    border-color: #00C48C; /* Color de acento al enfocar */
+    box-shadow: 0 0 0 2px #00c48c33; /* Un "glow" sutil */
+}

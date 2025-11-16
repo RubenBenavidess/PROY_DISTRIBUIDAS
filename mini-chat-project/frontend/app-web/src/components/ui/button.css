@@ -1,0 +1,22 @@
+/* Basado en tu paleta de colores: #00C48C */
+.accent-button {
+    background-color: #00C48C;
+    color: #FFFFFF; /* Blanco para buen contraste */
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+    width: 100%; /* Ocupa todo el ancho del contenedor */
+}
+
+.accent-button:hover {
+    background-color: #00a374; /* Un toque más oscuro al pasar el mouse */
+}
+
+.accent-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

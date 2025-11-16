@@ -1,0 +1,69 @@
+.landing-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    /* El fondo oscuro ya lo pone 'index.css' */
+}
+
+.landing-wrapper {
+    width: 100%;
+    max-width: 450px;
+    padding: 2.5rem;
+    background-color: #2C2C2E; /* Fondo Secundario */
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.landing-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: #F5F5F5; /* Texto Principal */
+}
+
+.landing-subtitle {
+    font-size: 1rem;
+    color: #9E9E9E; /* Texto Secundario */
+    margin-bottom: 2rem;
+}
+
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.choice-button {
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+/* El botón verde (Acento) */
+.user-button {
+    background-color: #00C48C;
+    color: #FFFFFF;
+}
+
+.user-button:hover {
+    background-color: #00a374;
+}
+
+/* Un botón secundario gris */
+.admin-button {
+    background-color: #3A3A3C; /* Gris medio */
+    color: #F5F5F5; /* Blanco suave */
+    border: 1px solid #545458;
+}
+
+.admin-button:hover {
+    background-color: #4a4a4c;
+}

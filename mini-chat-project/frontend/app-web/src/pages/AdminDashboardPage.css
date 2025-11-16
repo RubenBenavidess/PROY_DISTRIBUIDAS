@@ -1,0 +1,200 @@
+/* Layout General (Igual) */
+.dashboard-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Header (Igual) */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: #2C2C2E;
+  border-bottom: 1px solid #3A3A3C;
+  flex-shrink: 0; /* Evita que el header se encoja */
+}
+.dashboard-header h1 { margin: 0; font-size: 1.25rem; }
+.logout-button {
+  background-color: #5c1c1c;
+  color: #f5c8c8;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.logout-button:hover { background-color: #7a2d2d; }
+
+/* --- NUEVO LAYOUT DE 2 COLUMNAS --- */
+.dashboard-columns {
+  display: flex;
+  flex-grow: 1;
+  overflow: hidden; /* Clave para que el scroll interno funcione */
+}
+
+.column {
+  height: 100%;
+}
+
+/* Columna 1: Lista */
+.column-list {
+  flex: 0 0 360px; /* Ancho fijo para la lista */
+  border-right: 1px solid #3A3A3C;
+  display: flex;
+  flex-direction: column;
+}
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 1rem 1rem 1.5rem;
+  border-bottom: 1px solid #3A3A3C;
+  flex-shrink: 0;
+}
+.list-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #9E9E9E;
+}
+.create-room-button-small {
+  background-color: #00C48C; /* Acento */
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.create-room-button-small:hover {
+  background-color: #00a374;
+}
+.room-list-container {
+  padding: 1rem;
+  flex-grow: 1;
+  overflow-y: auto; /* Scroll solo para la lista */
+}
+.error-text { color: #f5c8c8; }
+
+/* Columna 2: Estadísticas */
+.column-stats {
+  flex: 1; /* Ocupa el resto */
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.stats-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #F5F5F5;
+  margin-top: 0;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #00C48C; /* Acento */
+  padding-bottom: 1rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 2 columnas de tarjetas */
+  gap: 1.5rem;
+}
+
+.stat-card {
+  background-color: #2C2C2E;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #3A3A3C;
+}
+.stat-card span {
+  display: block;
+  font-size: 0.9rem;
+  color: #9E9E9E;
+  margin-bottom: 8px;
+}
+.stat-card strong {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #F5F5F5;
+}
+.stat-card .small-text {
+  font-size: 0.9rem;
+  color: #c0c0c0;
+  word-break: break-all; /* Para IDs largos */
+}
+
+/* Placeholder (cuando no hay sala) */
+.stats-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: #8A8A8E;
+}
+.stats-placeholder h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* --- MODAL DE CREAR SALA --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #2C2C2E;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 450px;
+}
+.modal-content h2 {
+  margin-top: 0;
+}
+
+.room-type-selector {
+  margin-bottom: 1.5rem;
+}
+.room-type-selector label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #F5F5F5;
+  margin-bottom: 8px;
+}
+.room-type-selector select {
+  width: 100%;
+  padding: 12px 14px;
+  background-color: #1C1C1E;
+  border: 1px solid #3A3A3C;
+  border-radius: 8px;
+  color: #F5F5F5;
+  font-size: 1rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+/* Botón secundario para "Cancelar" */
+.secondary-button {
+  background-color: #3A3A3C;
+}
+.secondary-button:hover {
+  background-color: #4a4a4c;
+}
