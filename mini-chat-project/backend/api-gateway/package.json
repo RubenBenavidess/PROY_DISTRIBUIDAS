@@ -1,0 +1,21 @@
+{
+    "name": "api-gateway",
+    "version": "1.0.0",
+    "description": "API Gateway para el proyecto de chat (Distribuidas/Seguridad)",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "dev": "nodemon index.js"
+    },
+    "dependencies": {
+        "cors": "^2.8.5",
+        "express": "^4.18.2",
+        "express-rate-limit": "^8.2.1",
+        "helmet": "^8.1.0",
+        "http-proxy-middleware": "^2.0.6",
+        "morgan": "^1.10.0"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.22"
+    }
+}
