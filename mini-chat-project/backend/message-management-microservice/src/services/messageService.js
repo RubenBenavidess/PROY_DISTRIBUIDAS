@@ -1,7 +1,6 @@
 import Message from '../models/Message.js';
 import Room from '../models/Room.js';
 import { verifyFile, sanitizeFile, detectContentType } from './fileVerificationClient.js';
-import { s3put } from '../lib/s3Client.js';
 import { putFromBuffer } from '../lib/s3put.js';
 
 /**
@@ -64,10 +63,14 @@ export async function saveMultimediaMessage(messageData) {
 
     const contentType = await detectContentType(content);
 
-    verifyFile(content, contentType, filename);
-    const sanitizedBuffer = sanitizeFile(content, contentType, filename);
+    if(!(await verifyFile(content, contentType, filename)).isSafe){
+        throw new Error('File failed security verification');
+    }
+
+    const sanitizedBuffer = await sanitizeFile(content, contentType, filename);
 
     const url = `messages/${roomId}/${Date.now()}_${filename}`;
+
     await putFromBuffer(sanitizedBuffer, url);
 
     const message = new Message({
@@ -93,14 +96,11 @@ export async function saveMultimediaMessage(messageData) {
  * @param {Object} options - Pagination options {limit, skip}
  * @returns {Array} - List of messages
  */
-export async function getMessages(roomId, options = {}) {
+export async function getLatestMessages(roomId, options = {}) {
     try {
         const { limit = 50, skip = 0 } = options;
 
         const query = { roomId };
-        if (before) {
-            query.createdAt = { $lt: new Date(before) };
-        }
 
         const messages = await Message
             .find(query)
