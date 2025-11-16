@@ -12,21 +12,14 @@ const ChatRoomPage = () => {
     const chatBodyRef = useRef(null); // Ref para hacer scroll automático
 
     // Saca toda la data del "cerebro" (roomStore)
-    const {
-        roomInfo,
-        messages,
-        nickname,
-        isConnected,
-        addMessage,
-        clearRoom
-    } = useRoomStore((state) => ({
-        roomInfo: state.roomInfo,
-        messages: state.messages,
-        nickname: state.nickname,
-        isConnected: state.isConnected,
-        addMessage: state.addMessage,
-        clearRoom: state.clearRoom,
-    }));
+    const roomInfo = useRoomStore((state) => state.roomInfo);
+    const messages = useRoomStore((state) => state.messages);
+    const nickname = useRoomStore((state) => state.nickname);
+    const isConnected = useRoomStore((state) => state.isConnected);
+    
+    // Leemos las acciones (funciones) del store
+    const addMessage = useRoomStore((state) => state.addMessage);
+    const clearRoom = useRoomStore((state) => state.clearRoom);
 
     // --- EFECTO 1: Escuchar Sockets y Manejar Salida ---
     useEffect(() => {

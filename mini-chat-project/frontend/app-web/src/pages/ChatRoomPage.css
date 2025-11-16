@@ -1,32 +1,32 @@
 /* Discord-Inspired Chat Layout */
 .chat-layout {
-  display: flex;
-  height: 100vh;
+    display: flex;
+    height: 100vh;
 }
 
 /* Columna 1: Chat */
 .chat-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-primary);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: radial-gradient(circle at 90% 130%, #244799 0%, #070f27 40%);
 }
 
 /* Header */
 .chat-header {
-  padding: 1rem 1.5rem;
-  background-color: var(--bg-secondary);
-  border-bottom: 1px solid var(--bg-primary);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-shrink: 0;
+    padding: 1rem 1.5rem;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
 }
 .chat-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-  color: var(--text-primary);
-  font-weight: 600;
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    font-weight: 600;
 }
 .chat-header span {
   display: none;
@@ -42,7 +42,7 @@
 /* Columna 2: Detalles */
 .details-column {
   flex: 0 0 300px;
-  background-color: var(--bg-secondary);
+    background: radial-gradient(circle at -20% 100%, #172d5f 0%, #070f27 40%);
   border-left: 1px solid var(--bg-primary);
   padding: 1.5rem;
   display: none;
