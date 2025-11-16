@@ -7,7 +7,7 @@ export const getSignedImageUrl = (key, expiresIn = 60 * 60 * 2,) => {
         s3,
         new GetObjectCommand(
             { 
-                Bucket: env.MINIO_BUCKET, 
+                Bucket: process.env.MINIO_BUCKET, 
                 Key: key 
             }
         ),
