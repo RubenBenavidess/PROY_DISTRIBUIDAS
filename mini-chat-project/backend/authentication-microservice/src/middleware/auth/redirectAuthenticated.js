@@ -11,7 +11,7 @@ export default function redirectAuthenticated(req, res, next){
         if (headerValue?.startsWith("Bearer ")) {
           token = headerValue.slice(7);
         }
-
+        
         if(!token){
             return next();
         }
@@ -21,7 +21,7 @@ export default function redirectAuthenticated(req, res, next){
         throw new Error("Forbidden Access");
 
     }catch(e){
-        return next(e);
+        return next();
     }
 
 }
