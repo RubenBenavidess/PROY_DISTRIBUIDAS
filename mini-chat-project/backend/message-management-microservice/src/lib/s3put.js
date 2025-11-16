@@ -1,17 +1,20 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { env } from '../config/env';
 import fs from 'fs';
 
-if (!env.MINIO_ACCESS_KEY || !env.MINIO_SECRET_KEY) {
+const MINIO_ACCESS_KEY = process.env.MINIO_ACCESS_KEY;
+const MINIO_SECRET_KEY = process.env.MINIO_SECRET_KEY;
+const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT;
+const MINIO_BUCKET = process.env.MINIO_BUCKET;
+
+if (!MINIO_ACCESS_KEY || !MINIO_SECRET_KEY) {
     throw new Error("Missing MINIO_ACCESS_KEY or MINIO_SECRET_KEY environment variables");
 }
 
 export const s3 = new S3Client({
-    endpoint: env.MINIO_ENDPOINT,
-    region: env.MINIO_REGION,
+    endpoint: MINIO_ENDPOINT,
     credentials: {
-        accessKeyId: env.MINIO_ACCESS_KEY,
-        secretAccessKey: env.MINIO_SECRET_KEY,
+        accessKeyId: MINIO_ACCESS_KEY,
+        secretAccessKey: MINIO_SECRET_KEY,
     },
     forcePathStyle: true,
     tls: true,
@@ -23,7 +26,7 @@ export const putFromFile = async (localPath, key) => {
     await s3.send(
         new PutObjectCommand(
             {
-                Bucket: env.MINIO_BUCKET,
+                Bucket: MINIO_BUCKET,
                 Key:    key,
                 Body:   fileStream,
                 ContentType: 'application/octet-stream',
@@ -36,7 +39,7 @@ export const putFromBuffer = async (buf, key) => {
     await s3.send(
         new PutObjectCommand(
             {
-                Bucket: env.MINIO_BUCKET,
+                Bucket: MINIO_BUCKET,
                 Key:    key,
                 Body:   buf,
                 ContentType: 'application/octet-stream',
