@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { compareHash } from "../security/bcrypter";
+import { compareHash } from "../security/bcrypter.js";
 
 const AdminSchema = new mongoose.Schema(
     { 

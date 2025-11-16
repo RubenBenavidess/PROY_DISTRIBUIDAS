@@ -1,0 +1,41 @@
+services:
+  #--- Servicio de Autenticación ---
+  auth-api:
+    build:
+      # El 'contexto' es la carpeta del microservicio
+      context: ./authentication-microservice/src
+      # Opcional, pero explícito:
+      dockerfile: Dockerfile
+    restart: unless-stopped 
+    container_name: auth-api
+    env_file:
+      # La ruta al .env, relativa al compose.yaml
+      - ./.env
+    ports:
+      - "3000:${PORT}" # Host:Container
+    networks:
+      - app-net
+
+  api-gateway:
+    build:
+      context: ./api-gateway # La carpeta de tu Gateway
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    container_name: api-gateway
+    env_file:
+      - ./.env # Usamos el mismo .env
+    ports:
+      # El puerto 8080 del HOST (tu PC) se conecta al G_PORT del CONTENEDOR
+      - "8080:${G_PORT}" 
+    networks:
+      - app-net
+    depends_on:
+      # Le dice a Docker: "No arranques el Gateway HASTA QUE
+      # auth-api (y message-api) ya estén corriendo".
+      - auth-api
+      # - message-api 
+      # - image-api
+
+networks:
+  app-net:
+    driver: bridge

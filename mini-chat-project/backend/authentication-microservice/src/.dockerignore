@@ -1,0 +1,37 @@
+# Ignorar la carpeta de módulos de Node local.
+# Docker instalará sus propias dependencias dentro del contenedor.
+node_modules
+
+# Ignorar logs de NPM y logs en general
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+*.log
+
+# Ignorar archivos de secretos.
+# Estos se deben pasar como variables de entorno.
+.env
+.env.*
+!.env.example
+
+# Ignorar archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Ignorar archivos de control de versiones (Git)
+.git
+.gitignore
+
+# Ignorar archivos relacionados con Docker (no deben estar en la imagen)
+Dockerfile
+.dockerignore
+
+# Ignorar archivos de configuración de IDEs
+.vscode/
+
+# Ignorar archivos de caché o configuración de herramientas
+.eslintcache
+.eslint.config.js
+
+# Test
+test/
