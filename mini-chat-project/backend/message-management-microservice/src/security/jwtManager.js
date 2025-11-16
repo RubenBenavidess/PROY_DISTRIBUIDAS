@@ -14,20 +14,10 @@ function loadKey(envPathVar) {
   return null;
 }
 
-const PRIVATE_KEY = loadKey("PRIVATE_KEY_PATH");
 const PUBLIC_KEY = loadKey("PUBLIC_KEY_PATH");
 
-if (!PRIVATE_KEY || !PUBLIC_KEY) {
-  console.warn("JWT keys not found in env. Set PRIVATE_KEY_PATH and PUBLIC_KEY_PATH.");
-}
-
-export function generateToken(payload, options = {}) {
-  if (!PRIVATE_KEY) throw new Error("Private Key Not Found");
-  const token = jwt.sign(payload, PRIVATE_KEY, {
-    expiresIn: options.expiresIn || "1h",
-    algorithm: "ES256"
-  });
-  return token;
+if (!PUBLIC_KEY) {
+  console.warn("JWT keys not found in env. Set PUBLIC_KEY_PATH.");
 }
 
 export function validateToken(token) {
