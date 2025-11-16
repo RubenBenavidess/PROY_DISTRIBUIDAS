@@ -19,6 +19,12 @@ const roomSchema = new mongoose.Schema({
         type: Number,
         required: true,
         default: 30
+    },
+
+    title: {
+        type: String,
+        required: true,
+        default: 'Untitled Room'
     }
 }, {
     timestamps: true

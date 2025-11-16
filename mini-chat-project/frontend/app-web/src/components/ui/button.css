@@ -1,7 +1,7 @@
-/* Basado en tu paleta de colores: #00C48C */
+/* Discord-Inspired Button */
 .accent-button {
-    background-color: #00C48C;
-    color: #FFFFFF; /* Blanco para buen contraste */
+    background-color: var(--accent-primary);
+    color: #FFFFFF;
     font-size: 1rem;
     font-weight: 600;
     padding: 12px 20px;
@@ -9,11 +9,11 @@
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.2s ease, opacity 0.2s ease;
-    width: 100%; /* Ocupa todo el ancho del contenedor */
+    width: 100%;
 }
 
 .accent-button:hover {
-    background-color: #00a374; /* Un toque más oscuro al pasar el mouse */
+    background-color: #3a49d4;
 }
 
 .accent-button:disabled {

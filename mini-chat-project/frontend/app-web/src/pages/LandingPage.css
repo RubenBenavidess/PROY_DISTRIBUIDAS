@@ -3,16 +3,15 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    /* El fondo oscuro ya lo pone 'index.css' */
 }
 
 .landing-wrapper {
     width: 100%;
     max-width: 450px;
     padding: 2.5rem;
-    background-color: #2C2C2E; /* Fondo Secundario */
+    background-color: var(--bg-secondary);
     border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     text-align: center;
 }
 
@@ -21,12 +20,12 @@
     font-weight: 700;
     margin-top: 0;
     margin-bottom: 0.5rem;
-    color: #F5F5F5; /* Texto Principal */
+    color: var(--text-primary);
 }
 
 .landing-subtitle {
     font-size: 1rem;
-    color: #9E9E9E; /* Texto Secundario */
+    color: var(--text-secondary);
     margin-bottom: 2rem;
 }
 
@@ -47,23 +46,23 @@
     width: 100%;
 }
 
-/* El botón verde (Acento) */
+/* Botón principal (Acento Azul) */
 .user-button {
-    background-color: #00C48C;
+    background-color: var(--accent-primary);
     color: #FFFFFF;
 }
 
 .user-button:hover {
-    background-color: #00a374;
+    background-color: #3a49d4;
 }
 
-/* Un botón secundario gris */
+/* Botón secundario (Gris) */
 .admin-button {
-    background-color: #3A3A3C; /* Gris medio */
-    color: #F5F5F5; /* Blanco suave */
-    border: 1px solid #545458;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .admin-button:hover {
-    background-color: #4a4a4c;
+    background-color: #444750;
 }

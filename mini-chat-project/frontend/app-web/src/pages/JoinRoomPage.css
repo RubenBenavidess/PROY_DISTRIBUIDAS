@@ -9,9 +9,9 @@
     width: 100%;
     max-width: 400px;
     padding: 2rem;
-    background-color: #2C2C2E;
+    background-color: var(--bg-secondary);
     border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .join-title {
@@ -20,18 +20,20 @@
     text-align: center;
     margin-top: 0;
     margin-bottom: 0.5rem;
+    color: var(--text-primary);
 }
 
 .join-subtitle {
     font-size: 1rem;
-    color: #9E9E9E;
+    color: var(--text-secondary);
     text-align: center;
     margin-bottom: 2rem;
 }
 
 .error-message {
-    background-color: #5c1c1c;
-    color: #f5c8c8;
+    background-color: rgba(242, 63, 67, 0.15);
+    color: var(--accent-red);
+    border: 1px solid var(--accent-red);
     padding: 10px 14px;
     border-radius: 6px;
     margin-bottom: 1rem;

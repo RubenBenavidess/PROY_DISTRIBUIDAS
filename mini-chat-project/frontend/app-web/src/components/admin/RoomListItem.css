@@ -5,25 +5,25 @@
     border-radius: 10px;
     margin-bottom: 8px;
     cursor: pointer;
-    border: 2px solid transparent; /* Borde clave para el estado 'selected' */
+    border: 2px solid transparent;
     transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 /* Estado normal (hover) */
 .room-list-item:hover {
-    background-color: #3A3A3C; /* Gris Medio */
+    background-color: var(--bg-tertiary);
 }
 
-/* Estado seleccionado (¡Aquí va el color!) */
+/* Estado seleccionado */
 .room-list-item.selected {
-    background-color: #00c48c1a; /* Verde acento con 10% opacidad */
-    border-color: #00C48C; /* Borde verde acento */
+    background-color: rgba(74, 89, 228, 0.1);
+    border-color: var(--accent-primary);
 }
 
 .room-icon {
     font-size: 1rem;
     padding: 8px 10px;
-    background-color: #3A3A3C;
+    background-color: var(--bg-tertiary);
     border-radius: 8px;
     margin-right: 12px;
 }
@@ -37,20 +37,20 @@
 .room-title {
     font-size: 1rem;
     font-weight: 600;
-    color: #F5F5F5; /* Texto Principal */
+    color: var(--text-primary);
 }
 
 .room-subtitle {
     font-size: 0.85rem;
-    color: #9E9E9E; /* Texto Secundario */
+    color: var(--text-secondary);
 }
 
-/* El contador de usuarios con tu color de acento */
+/* El contador de usuarios con el acento principal */
 .room-user-count {
     font-size: 0.9rem;
     font-weight: 600;
     padding: 4px 8px;
     border-radius: 6px;
-    background-color: #00C48C;
+    background-color: var(--accent-primary);
     color: #FFFFFF;
 }

@@ -1,52 +1,84 @@
-.bubble-container {
-    display: flex;
-    margin-bottom: 0.75rem;
+/* Discord-Inspired Chat Bubbles */
+.chat-message-row {
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.message-header {
+  margin-bottom: 4px;
+  display: flex;
+  align-items: baseline;
+}
+
+.username {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-right: 8px;
+}
+
+.timestamp {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
 }
 
 /* Burbujas de otros (Gris) */
-.bubble-container.other {
-    justify-content: flex-start;
-}
-.bubble-container.other .bubble {
-    background-color: #3A3A3C; /* Gris Medio (Tu Spec) */
-    border-radius: 20px 20px 20px 5px;
-}
-.bubble-username {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #00C48C; /* Acento */
-    margin-bottom: 4px;
+.bubble.other-bubble {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-radius: 4px 12px 12px 12px;
 }
 
-/* Mis burbujas (Verde) */
-.bubble-container.me {
-    justify-content: flex-end;
-}
-.bubble-container.me .bubble {
-    background-color: #00C48C; /* Verde Acento (Tu Spec) */
-    color: #FFFFFF;
-    border-radius: 20px 20px 5px 20px;
-}
-/* Oculta mi propio nombre */
-.bubble-container.me .bubble-username {
-    display: none;
+/* Mis burbujas (Azul Acento) */
+.bubble.me-bubble {
+  background-color: var(--accent-primary);
+  color: #FFFFFF;
+  border-radius: 12px 4px 12px 12px;
 }
 
-/* Estilo general de la burbuja */
+/* Alineación para "mí" */
+.chat-message-row.me {
+  justify-content: flex-end;
+}
+.chat-message-row.me .message-content {
+  align-items: flex-end;
+}
+.chat-message-row.me .message-header {
+  flex-direction: row-reverse;
+}
+.chat-message-row.me .timestamp {
+  margin-right: 0;
+  margin-left: 8px;
+}
+
 .bubble {
-    max-width: 70%;
-    padding: 10px 16px;
-    word-wrap: break-word;
+  max-width: 100%;
+  padding: 10px 14px;
+  word-wrap: break-word;
 }
-.bubble-content {
-    font-size: 0.95rem;
+.bubble-text {
+  font-size: 0.95rem;
+  line-height: 1.4;
 }
-.bubble-content.file {
-    font-style: italic;
-}
-.bubble-timestamp {
-    font-size: 0.75rem;
-    text-align: right;
-    margin-top: 4px;
-    opacity: 0.7;
+.bubble-text.file {
+  font-style: italic;
 }
