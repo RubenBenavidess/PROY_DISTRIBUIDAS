@@ -1,0 +1,33 @@
+/* Discord-Inspired Color Palette (Dark Mode) */
+:root {
+    /* Fondos */
+    --bg-primary: #1E1F22;      /* Fondo Principal (chat background) */
+    --bg-secondary: #2A2C30;    /* Fondo Secundario (sidebars, input background) */
+    --bg-tertiary: #36393F;     /* Fondo Terciario (other user bubbles, button hover) */
+    
+    /* Acentos */
+    --accent-primary: #4A59E4;  /* Acento Principal (user's bubble, send buttons) */
+    --accent-green: #23A55A;    /* Acento Verde (call button) */
+    --accent-red: #F23F43;      /* Notificación (red notification dot) */
+    
+    /* Texto */
+    --text-primary: #F5F5F5;    /* Texto Principal (text in bubbles, titles) */
+    --text-secondary: #9E9E9E;  /* Texto Secundario (timestamps, placeholders) */
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Para que los inputs y botones hereden las fuentes */
+input, button, textarea, select {
+    font: inherit;
+}

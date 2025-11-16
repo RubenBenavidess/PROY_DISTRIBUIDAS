@@ -1,0 +1,210 @@
+/* Layout General */
+.dashboard-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Header */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--bg-primary);
+  flex-shrink: 0;
+}
+.dashboard-header h1 { 
+  margin: 0; 
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+.logout-button {
+  background-color: rgba(242, 63, 67, 0.15);
+  color: var(--accent-red);
+  border: 1px solid var(--accent-red);
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.logout-button:hover { 
+  background-color: rgba(242, 63, 67, 0.25);
+}
+
+/* Layout de 2 Columnas */
+.dashboard-columns {
+  display: flex;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.column {
+  height: 100%;
+}
+
+/* Columna 1: Lista */
+.column-list {
+  flex: 0 0 360px;
+  border-right: 1px solid var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 1rem 1rem 1.5rem;
+  border-bottom: 1px solid var(--bg-primary);
+  flex-shrink: 0;
+}
+.list-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+.create-room-button-small {
+  background-color: var(--accent-green);
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.create-room-button-small:hover {
+  background-color: #1d8c4a;
+}
+.room-list-container {
+  padding: 1rem;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+.error-text { 
+  color: var(--accent-red);
+}
+
+/* Columna 2: Estadísticas */
+.column-stats {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  background-color: var(--bg-secondary);
+}
+
+.stats-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 0;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid var(--accent-primary);
+  padding-bottom: 1rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.stat-card {
+  background-color: var(--bg-tertiary);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.stat-card span {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.stat-card strong {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.stat-card .small-text {
+  font-size: 0.9rem;
+  color: #c0c0c0;
+  word-break: break-all;
+}
+
+/* Placeholder (cuando no hay sala) */
+.stats-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: var(--text-secondary);
+}
+.stats-placeholder h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Modal de Crear Sala */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: var(--bg-secondary);
+  padding: 2rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 450px;
+}
+.modal-content h2 {
+  margin-top: 0;
+  color: var(--text-primary);
+}
+
+.room-type-selector {
+  margin-bottom: 1.5rem;
+}
+.room-type-selector label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.room-type-selector select {
+  width: 100%;
+  padding: 12px 14px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+/* Botón secundario para "Cancelar" */
+.secondary-button {
+  background-color: var(--bg-tertiary);
+}
+.secondary-button:hover {
+  background-color: #444750;
+}

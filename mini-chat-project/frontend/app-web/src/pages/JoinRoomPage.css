@@ -1,0 +1,42 @@
+.join-page-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.join-form-wrapper {
+    width: 100%;
+    max-width: 400px;
+    padding: 2rem;
+    background-color: var(--bg-secondary);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.join-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.join-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.error-message {
+    background-color: rgba(242, 63, 67, 0.15);
+    color: var(--accent-red);
+    border: 1px solid var(--accent-red);
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+}

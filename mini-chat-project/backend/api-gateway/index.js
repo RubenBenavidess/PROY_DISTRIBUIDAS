@@ -12,7 +12,7 @@ const PORT = process.env.G_PORT;
 
 // Microservice 
 const AUTH_SERVICE_URL = 'http://auth-api:3000';
-const MESSAGE_SERVICE_URL = 'http://message-management-microservice:8001';
+const MESSAGE_SERVICE_URL = 'http://message-management-microservice:3002';
 
 // Middlewares
 app.use(helmet()); // Security headers
@@ -40,6 +40,7 @@ app.use('/auth', createProxyMiddleware({
 app.use('/api', createProxyMiddleware({
     target: MESSAGE_SERVICE_URL, // ...send it to the message management service
     changeOrigin: true,
+    ws: true, // Enable WebSocket proxying
 }));
 
 // Check if the gateway is running

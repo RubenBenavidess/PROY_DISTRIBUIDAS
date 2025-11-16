@@ -1,0 +1,62 @@
+/* Discord-Inspired Message Input */
+.input-area-container {
+  padding: 1rem 1.5rem;
+  background-color: var(--bg-primary);
+  border-top: 1px solid var(--bg-secondary);
+}
+
+.input-area-wrapper {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 4px 8px;
+}
+
+.text-input {
+  flex-grow: 1;
+  border: none;
+  background-color: transparent;
+  color: var(--text-primary);
+  padding: 12px 8px;
+  font-size: 1rem;
+}
+.text-input:focus {
+  outline: none;
+}
+.text-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.input-icon-button {
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+.input-icon-button:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-tertiary);
+}
+
+.input-icon-button.send {
+  color: var(--accent-primary);
+  font-size: 1rem;
+}
+.input-icon-button.send:hover {
+  color: var(--accent-primary);
+  background-color: rgba(74, 89, 228, 0.15);
+}
+
+/* Call button with green accent */
+.input-icon-button.call {
+  color: var(--accent-green);
+}
+.input-icon-button.call:hover {
+  color: var(--accent-green);
+  background-color: rgba(35, 165, 90, 0.15);
+}

@@ -6,12 +6,12 @@ class RoomController {
      */
     async createRoom(req, res, next) {
         try {
-            const { type, sizeLimit, contentSizeLimit } = req.body;
-
+            const { title, type, sizeLimit, contentSizeLimit } = req.body;
             // Get admin ID from authenticated user
             const adminId = req.user?.id || 'system';
 
             const result = await roomService.createRoom({
+                title,
                 type,
                 sizeLimit,
                 contentSizeLimit,

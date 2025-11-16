@@ -1,0 +1,22 @@
+/* Discord-Inspired Button */
+.accent-button {
+    background-color: var(--accent-primary);
+    color: #FFFFFF;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+    width: 100%;
+}
+
+.accent-button:hover {
+    background-color: #3a49d4;
+}
+
+.accent-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

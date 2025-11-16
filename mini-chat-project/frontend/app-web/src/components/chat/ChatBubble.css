@@ -1,0 +1,84 @@
+/* Discord-Inspired Chat Bubbles */
+.chat-message-row {
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.message-header {
+  margin-bottom: 4px;
+  display: flex;
+  align-items: baseline;
+}
+
+.username {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-right: 8px;
+}
+
+.timestamp {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* Burbujas de otros (Gris) */
+.bubble.other-bubble {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-radius: 4px 12px 12px 12px;
+}
+
+/* Mis burbujas (Azul Acento) */
+.bubble.me-bubble {
+  background-color: var(--accent-primary);
+  color: #FFFFFF;
+  border-radius: 12px 4px 12px 12px;
+}
+
+/* Alineación para "mí" */
+.chat-message-row.me {
+  justify-content: flex-end;
+}
+.chat-message-row.me .message-content {
+  align-items: flex-end;
+}
+.chat-message-row.me .message-header {
+  flex-direction: row-reverse;
+}
+.chat-message-row.me .timestamp {
+  margin-right: 0;
+  margin-left: 8px;
+}
+
+.bubble {
+  max-width: 100%;
+  padding: 10px 14px;
+  word-wrap: break-word;
+}
+.bubble-text {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.bubble-text.file {
+  font-style: italic;
+}

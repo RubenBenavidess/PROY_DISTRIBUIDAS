@@ -11,7 +11,7 @@ class RoomService {
      */
     async createRoom(roomData) {
         try {
-            const { type, sizeLimit = 30, contentSizeLimit = 10, adminId } = roomData;
+            const { title, type, sizeLimit = 30, contentSizeLimit = 10, adminId } = roomData;
 
             // Generate unique room ID
             const roomId = encryptionService.generateRoomId();
@@ -28,6 +28,7 @@ class RoomService {
                 pin: `${hashedPin}:${salt}`, // Store hash:salt
                 type,
                 sizeLimit,
+                title,
                 contentSizeLimit
             });
 
@@ -42,6 +43,7 @@ class RoomService {
                 pin,
                 type,
                 sizeLimit,
+                title,
                 contentSizeLimit,
                 createdAt: room.createdAt
             };
