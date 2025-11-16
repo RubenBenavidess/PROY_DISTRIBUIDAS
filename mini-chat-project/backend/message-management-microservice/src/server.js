@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
-import { connect } from './config/db.js';
+import connect from './config/db.js';
 import { initializeWebSocket } from './websocket/socketHandler.js';
 import roomRoutes from './routes/roomRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
