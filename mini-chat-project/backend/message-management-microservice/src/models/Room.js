@@ -20,7 +20,11 @@ const roomSchema = new mongoose.Schema({
         required: true,
         default: 30
     },
-
+    contentSizeLimit: {
+        type: Number,
+        required: true,
+        default: 5 // in MB
+    },
     title: {
         type: String,
         required: true,
