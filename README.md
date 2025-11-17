@@ -1,5 +1,7 @@
 Sistema de chat distribuido en tiempo real con arquitectura de microservicios, autenticación basada en JWT, gestión de salas con PIN, y soporte para mensajería de texto y multimedia.
 
+Link del repositorio del proyecto: https://github.com/RubenBenavidess/PROY_DISTRIBUIDAS 
+
 ## Tabla de Contenidos
 
 - [Arquitectura del Sistema](#arquitectura-del-sistema)
