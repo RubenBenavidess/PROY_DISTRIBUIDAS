@@ -8,6 +8,7 @@ import router from "./routes/authRouter.js";
 import helmet from "helmet";
 import cors from "cors";
 import handleErrors from "./middleware/errors/errorMIddleware.js";
+import cookieParser from "cookie-parser";
 
 // Initialization/Connection to DB
 connect();
@@ -17,6 +18,7 @@ const app = express();
 
 //  security middleware
 app.use(helmet());
+app.use(cookieParser());
 
 const CORS_OPTIONS = {
     origin: '*',
@@ -28,11 +30,6 @@ app.use(cors(CORS_OPTIONS));
 app.use(express.json());
 app.use(router);
 
-// Error middleware
-
-app.use(handleErrors);
-
-
 // Other endpoints
 app.use((req, res) => {
     res.status(404).json({
@@ -40,6 +37,10 @@ app.use((req, res) => {
         message: `Not Found: ${req.method} ${req.originalUrl}`
     });
 });
+
+// Error middleware
+
+app.use(handleErrors);
 
 // Init App
 const PORT = process.env.PORT;

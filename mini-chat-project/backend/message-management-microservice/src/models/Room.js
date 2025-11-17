@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { compareHash } from "../security/bcrypter";
 
 const roomSchema = new mongoose.Schema({
     roomId: {
@@ -37,8 +38,8 @@ const roomSchema = new mongoose.Schema({
 roomSchema.index({ type: 1, createdAt: -1 });
 roomSchema.index({ roomId: 1, type: 1 });
 
-roomSchema.methods.comparePin = function(candidatePin) {
-    return this.pin === candidatePin;
+roomSchema.methods.comparePin = async function(candidatePin) {
+    return await compareHash(candidatePin, this.pin);
 };
 
 roomSchema.methods.canAddMore = function(currentSize) {

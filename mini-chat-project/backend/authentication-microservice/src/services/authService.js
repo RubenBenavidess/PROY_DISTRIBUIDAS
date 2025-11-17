@@ -20,10 +20,8 @@ export async function login(admin){
         username: foundAdmin.publicUsername
     }
     const token = generateToken(payload);
-    return {
-        success: true,
-        token: token
-    };
+
+    return token;
 
 }
 

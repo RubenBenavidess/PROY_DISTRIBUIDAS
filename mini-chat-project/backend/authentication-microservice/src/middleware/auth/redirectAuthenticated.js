@@ -2,15 +2,11 @@ import { validateToken } from "../../security/jwtManager.js";
 
 export default function redirectAuthenticated(req, res, next){
 
-    const TOKEN_HEADER_KEY = process.env.TOKEN_HEADER_KEY;    
-
     try{
 
-        let token;
-        const headerValue = req.header(TOKEN_HEADER_KEY);
-        if(headerValue?.startsWith("Bearer ")) {
-            token = headerValue.slice(7);
-        }
+        const token = req.cookies.accessToken;
+
+        if(!token) return next();
 
         validateToken(token);
 
