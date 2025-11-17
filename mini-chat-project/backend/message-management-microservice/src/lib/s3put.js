@@ -12,6 +12,7 @@ if (!MINIO_ACCESS_KEY || !MINIO_SECRET_KEY || !MINIO_ENDPOINT || !MINIO_BUCKET) 
 
 export const s3 = new S3Client({
     endpoint: MINIO_ENDPOINT,
+    region: 'us-east-1',
     credentials: {
         accessKeyId: MINIO_ACCESS_KEY,
         secretAccessKey: MINIO_SECRET_KEY,
