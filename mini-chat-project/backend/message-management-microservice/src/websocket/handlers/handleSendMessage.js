@@ -1,12 +1,61 @@
-import messageService from '../../services/messageService.js';
-import encryptionService from '../../services/encryptionService.js';
+import { saveMessage } from '../../services/messageService.js';
 import { userNicknames } from '../socketHandler.js';
 
 /**
+ * Validate message content
+ * @param {string} content - Message content
+ * @returns {Object} Validation result {valid: boolean, error?: string}
+ */
+function validateMessageContent(content) {
+    if (!content || typeof content !== 'string') {
+        return { valid: false, error: 'Message content is required' };
+    }
+
+    if (content.trim().length === 0) {
+        return { valid: false, error: 'Message cannot be empty' };
+    }
+
+    return { valid: true };
+}
+
+/**
+ * Build message data for broadcasting
+ * @param {string} messageId - Message ID
+ * @param {string} hashedNickname - Hashed nickname
+ * @param {string} content - Message content (encrypted from client)
+ * @param {Date} timestamp - Message timestamp
+ * @returns {Object} Message data object
+ */
+function buildMessageData(messageId, hashedNickname, content, timestamp) {
+    return {
+        id: messageId,
+        username: hashedNickname,
+        content,
+        contentType: 'text',
+        timestamp
+    };
+}
+
+/**
+ * Broadcast message to room
+ * @param {Object} io - Socket.IO server instance
+ * @param {string} roomId - Room ID
+ * @param {Object} messageData - Message data to broadcast
+ */
+function broadcastMessage(io, roomId, messageData) {
+    io.to(roomId).emit('new-message', messageData);
+}
+
+/**
  * Handle message send
+ * @param {Object} socket - Socket.io socket
+ * @param {Object} data - Data from client {content}
+ * @param {Function} callback - Callback to send response
+ * @param {Object} io - Socket.IO server instance
  */
 export async function handleSendMessage(socket, data, callback, io) {
     try {
+        // Get user info
         const userInfo = userNicknames.get(socket.id);
 
         if (!userInfo) {
@@ -19,44 +68,39 @@ export async function handleSendMessage(socket, data, callback, io) {
         const { content } = data;
         const { roomId, nickname } = userInfo;
 
-        // Validate message
-        messageService.validateMessage(content, 'text');
+        // Validate message content
+        const validation = validateMessageContent(content);
+        if (!validation.valid) {
+            return callback({
+                success: false,
+                error: validation.error
+            });
+        }
 
         // Get user IP
         const userIP = socket.handshake.address;
 
-        // Save message
-        const result = await messageService.saveMessage({
+        // Save message to database (content comes encrypted from client)
+        const result = await saveMessage({
             roomId,
             username: nickname,
             userIP,
-            contentType: 'text',
             content
         });
 
-        // Create message signature for integrity
-        const signature = encryptionService.signMessage({
+        // Build message data
+        const messageData = buildMessageData(
+            result.messageId,
+            nickname,
             content,
-            roomId,
-            username: nickname,
-            timestamp: result.timestamp
-        });
+            result.timestamp
+        );
 
-        // Broadcast to room
-        const messageData = {
-            id: result.messageId,
-            username: nickname,
-            hashedUsername: encryptionService.hashUsername(nickname, roomId),
-            content,
-            contentType: 'text',
-            timestamp: result.timestamp,
-            signature
-        };
+        // Broadcast to all users in room
+        broadcastMessage(io, roomId, messageData);
 
-        io.to(roomId).emit('new-message', messageData);
-
-        // Log for audit
-        console.log(`[AUDIT] Message sent: room=${roomId}, user=${nickname}, messageId=${result.messageId}`);
+        // Audit log
+        console.log(`[AUDIT] Message sent: room=${roomId}, hashedNickname=${nickname}, messageId=${result.messageId}`);
 
         callback({
             success: true,
