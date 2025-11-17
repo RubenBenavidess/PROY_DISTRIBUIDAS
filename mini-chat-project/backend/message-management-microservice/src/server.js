@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import connect from './config/db.js';
 import { initializeWebSocket } from './websocket/socketHandler.js';
@@ -28,6 +29,7 @@ const httpServer = createServer(app);
 
 // Security middleware
 app.use(helmet());
+app.use(cookieParser());
 app.use(cors({
     origin: config.corsOrigin,
     credentials: true

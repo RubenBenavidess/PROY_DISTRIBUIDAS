@@ -1,5 +1,5 @@
 import express from 'express';
-import roomController from '../controllers/roomController.js';
+import { createRoom, getAllRooms, getRoomInfo, deleteRoom, getRoomParticipants } from '../controllers/roomController.js';
 import requireAuth from '../middleware/auth/requireAuth.js';
 
 const router = express.Router();
@@ -9,34 +9,34 @@ const router = express.Router();
  * @desc    Create a new room (admin only)
  * @access  Protected
  */
-router.post('/', requireAuth, roomController.createRoom);
+router.post('/', requireAuth, createRoom);
 
 /**
  * @route   GET /api/rooms
  * @desc    Get all rooms (admin only)
  * @access  Protected
  */
-router.get('/', requireAuth, roomController.getAllRooms);
+router.get('/', requireAuth, getAllRooms);
 
 /**
  * @route   GET /api/rooms/:roomId
  * @desc    Get room info
  * @access  Public
  */
-router.get('/:roomId', roomController.getRoomInfo);
+router.get('/:roomId', getRoomInfo);
 
 /**
  * @route   DELETE /api/rooms/:roomId
  * @desc    Delete a room (admin only)
  * @access  Protected
  */
-router.delete('/:roomId', requireAuth, roomController.deleteRoom);
+router.delete('/:roomId', requireAuth, deleteRoom);
 
 /**
  * @route   GET /api/rooms/:roomId/participants
  * @desc    Get room participants
  * @access  Public
  */
-router.get('/:roomId/participants', roomController.getRoomParticipants);
+router.get('/:roomId/participants', getRoomParticipants);
 
 export default router;

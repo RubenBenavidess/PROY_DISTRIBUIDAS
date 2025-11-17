@@ -60,7 +60,7 @@ export async function createRoom(roomData){
     const pin = generatePIN();
 
     // Hash PIN before storing
-    const hashedPin = generateHash(pin);
+    const hashedPin = await generateHash(pin);
 
     // Create room
     const room = new Room({
@@ -169,6 +169,7 @@ export async function getRoomInfo(roomId) {
     
     return {
         roomId: room.roomId,
+        title: room.title,
         type: room.type,
         sizeLimit: room.sizeLimit,
         contentSizeLimit: room.contentSizeLimit,
@@ -185,8 +186,10 @@ export async function getAllRooms() {
 
     return rooms.map(room => ({
         roomId: room.roomId,
+        title: room.title,
         type: room.type,
         sizeLimit: room.sizeLimit,
+        contentSizeLimit: room.contentSizeLimit,
         currentParticipants: getRoomParticipantCount(room.roomId),
         createdAt: room.createdAt
     }));

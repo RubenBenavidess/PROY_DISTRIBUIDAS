@@ -1,4 +1,4 @@
-import roomService from '../../services/roomService.js';
+import { leaveRoom, getRoomParticipantCount } from '../../services/roomService.js';
 import { sessionCache, userNicknames, roomSockets } from '../socketHandler.js';
 
 /**
@@ -34,9 +34,12 @@ function removeSocketFromRoom(roomId, socketId) {
  * @param {string} hashedNickname - Hashed nickname (already hashed)
  */
 function notifyUserLeft(socket, roomId, hashedNickname) {
+    const remainingParticipants = getRoomParticipantCount(roomId);
+    
     socket.to(roomId).emit('user-left', {
         nickname: hashedNickname,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        participants: remainingParticipants
     });
 }
 
@@ -60,7 +63,7 @@ export async function handleLeaveRoom(socket, callback) {
         const { roomId, nickname, sessionId } = userInfo;
 
         // Leave room in service layer
-        await roomService.leaveRoom(roomId, sessionId, nickname);
+        await leaveRoom(roomId, sessionId, nickname);
 
         // Clear session data
         clearUserSession(socket.id, sessionId);

@@ -1,4 +1,4 @@
-import roomService from '../../services/roomService.js';
+import { getRoomInfo } from '../../services/roomService.js';
 import { saveMultimediaMessage } from '../../services/messageService.js';
 import { userNicknames } from '../socketHandler.js';
 
@@ -118,7 +118,7 @@ export async function handleSendFile(socket, data, callback, io) {
         }
 
         // Get room info
-        const room = await roomService.getRoomInfo(roomId);
+        const room = await getRoomInfo(roomId);
 
         // Check if room allows media
         const mediaValidation = validateRoomSupportsMedia(room);

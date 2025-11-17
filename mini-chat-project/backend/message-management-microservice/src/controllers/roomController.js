@@ -1,4 +1,10 @@
-import { createRoom, leaveRoom, getRoomInfo, getAllRooms, deleteRoom, getRoomParticipants } from "../services/roomService";
+import { 
+    createRoom as createRoomService, 
+    getRoomInfo as getRoomInfoService, 
+    getAllRooms as getAllRoomsService, 
+    deleteRoom as deleteRoomService, 
+    getRoomParticipants as getRoomParticipantsService 
+} from "../services/roomService.js";
 
 export async function createRoom(req, res, next) {
     try {
@@ -6,7 +12,7 @@ export async function createRoom(req, res, next) {
         // Get admin ID from authenticated user
         const adminId = req.user?.id || 'system';
 
-        const result = await roomService.createRoom({
+        const result = await createRoomService({
             title,
             type,
             sizeLimit,
@@ -23,7 +29,7 @@ export async function createRoom(req, res, next) {
 export async function getRoomInfo(req, res, next) {
     try {
         const { roomId } = req.params;
-        const roomInfo = await roomService.getRoomInfo(roomId);
+        const roomInfo = await getRoomInfoService(roomId);
         res.status(200).json({
             success: true,
             room: roomInfo
@@ -35,7 +41,7 @@ export async function getRoomInfo(req, res, next) {
 
 export async function getAllRooms(req, res, next) {
     try {
-        const rooms = await roomService.getAllRooms();
+        const rooms = await getAllRoomsService();
         res.status(200).json({
             success: true,
             rooms
@@ -48,7 +54,7 @@ export async function getAllRooms(req, res, next) {
 export async function deleteRoom(req, res, next) {
     try {
         const { roomId } = req.params;
-        const result = await roomService.deleteRoom(roomId);
+        const result = await deleteRoomService(roomId);
         res.status(200).json(result);
     } catch (error) {
         next(error);
@@ -58,7 +64,7 @@ export async function deleteRoom(req, res, next) {
 export async function getRoomParticipants(req, res, next) {
     try {
         const { roomId } = req.params;
-        const participants = roomService.getRoomParticipants(roomId);
+        const participants = await getRoomParticipantsService(roomId);
         res.status(200).json({
             success: true,
             count: participants.length,

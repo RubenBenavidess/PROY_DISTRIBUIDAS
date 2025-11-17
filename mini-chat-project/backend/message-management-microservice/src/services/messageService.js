@@ -7,7 +7,7 @@ import { putFromBuffer } from '../lib/s3put.js';
  * Check file verification service availability
  */
 export async function checkFileVerificationService() {
-    const isAvailable = healthCheck();
+    const isAvailable = await healthCheck();
     if (isAvailable) {
         console.log('File verification service is available');
     } else {
@@ -61,13 +61,13 @@ export async function saveMultimediaMessage(messageData) {
         throw new Error('Invalid content type for text room');
     }
 
-    const contentType = detectContentType(content);
+    const contentType = await detectContentType(content);
 
-    if(!verifyFile(content, contentType, filename).isSafe){
+    if(!(await verifyFile(content, contentType, filename)).isSafe){
         throw new Error('File failed security verification');
     }
 
-    const sanitizedBuffer = sanitizeFile(content, contentType, filename);
+    const sanitizedBuffer = await sanitizeFile(content, contentType, filename);
 
     const url = `messages/${roomId}/${Date.now()}_${filename}`;
 
