@@ -6,8 +6,8 @@ const MINIO_SECRET_KEY = process.env.MINIO_SECRET_KEY;
 const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT;
 const MINIO_BUCKET = process.env.MINIO_BUCKET;
 
-if (!MINIO_ACCESS_KEY || !MINIO_SECRET_KEY) {
-    throw new Error("Missing MINIO_ACCESS_KEY or MINIO_SECRET_KEY environment variables");
+if (!MINIO_ACCESS_KEY || !MINIO_SECRET_KEY || !MINIO_ENDPOINT || !MINIO_BUCKET) {
+    throw new Error("Missing required MinIO environment variables (MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_ENDPOINT, MINIO_BUCKET)");
 }
 
 export const s3 = new S3Client({
@@ -17,7 +17,7 @@ export const s3 = new S3Client({
         secretAccessKey: MINIO_SECRET_KEY,
     },
     forcePathStyle: true,
-    tls: true,
+    tls: process.env.MINIO_USE_TLS !== 'false',
 });
 
 export const putFromFile = async (localPath, key) => {
