@@ -83,14 +83,20 @@ export async function saveMultimediaMessage(messageData) {
         username,
         userIP,
         contentType,
-        content: url
+        content: url,
+        filename
     });
 
     await message.save();
 
+    // Generate signed URL for the uploaded file
+    const signedUrl = await getSignedImageUrl(url);
+
     return {
         messageId: message._id,
-        timestamp: message.createdAt
+        timestamp: message.createdAt,
+        contentType,
+        signedUrl
     };
         
 }
@@ -109,7 +115,7 @@ export async function getLatestMessages(roomId, options = {}) {
 
         const messages = await Message
             .find(query)
-            .sort({ createdAt: -1 })
+            .sort({ createdAt: 1 }) // 1 = ascendente (más antiguos primero)
             .limit(limit)
             .skip(skip)
             .lean();

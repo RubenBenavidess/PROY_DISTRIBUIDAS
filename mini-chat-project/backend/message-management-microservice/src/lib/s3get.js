@@ -3,14 +3,8 @@ import { getSignedUrl }     from "@aws-sdk/s3-request-presigner";
 import { s3 }               from './s3put.js';
 
 export const getSignedImageUrl = (key, expiresIn = 60 * 60 * 2) => {
-    return getSignedUrl(
-        s3,
-        new GetObjectCommand(
-            { 
-                Bucket: process.env.MINIO_BUCKET, 
-                Key: key 
-            }
-        ),
-        { expiresIn },
-    );
+    // URL pública de MinIO accesible desde el navegador
+    const publicUrl = `http://localhost:9000/chat-files/${key}`;
+    
+    return Promise.resolve(publicUrl);
 }

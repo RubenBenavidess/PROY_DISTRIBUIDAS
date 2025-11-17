@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import './JoinRoomPage.css';
 import { socketService } from '../services/socketService';
 import { useRoomStore } from '../store/roomStore';
+import { hashNicknameForRoom } from '../utils/crypto';
 
 const JoinRoomPage = () => {
   const [roomId, setRoomId] = useState('');
@@ -33,16 +34,21 @@ const JoinRoomPage = () => {
       
       console.log('Intentando unirse a la sala:', { roomId, pin, nickname });
       
+      // Calcular el hash del nickname (igual que el backend)
+      const hashedNickname = await hashNicknameForRoom(nickname, roomId);
+      console.log('Nickname hasheado:', hashedNickname);
+      
       // Intentar unirse a la sala
       const data = await socketService.joinRoom({ roomId, pin, nickname });
       
       console.log('Respuesta de joinRoom:', data);
       
-      // Guardar datos en el store
+      // Guardar datos en el store (incluyendo el hash)
       setInitialData({
         roomInfo: data.roomInfo,
         messages: data.messages,
-        nickname: nickname,
+        nickname: nickname, // Nickname original para mostrar
+        hashedNickname: hashedNickname, // Hash para comparar con mensajes
         sessionId: data.sessionId,
       });
       

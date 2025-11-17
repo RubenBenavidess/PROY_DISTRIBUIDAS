@@ -21,6 +21,10 @@ const messageSchema = new mongoose.Schema({
     content: {
         type: String,
         required: true
+    },
+    filename: {
+        type: String,
+        required: false
     }
 }, {
     timestamps: true

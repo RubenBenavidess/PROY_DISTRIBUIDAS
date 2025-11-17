@@ -6,6 +6,7 @@ export const useRoomStore = create((set, get) => ({
   messages: [],
   participants: [],
   nickname: null,
+  hashedNickname: null, // NUEVO: Para comparar con los mensajes
   sessionId: null,
   isConnected: false, // <-- ¡VUELVE A FALSE!
 
@@ -16,6 +17,7 @@ export const useRoomStore = create((set, get) => ({
       roomInfo: data.roomInfo,
       messages: data.messages,
       nickname: data.nickname,
+      hashedNickname: data.hashedNickname, // NUEVO
       sessionId: data.sessionId,
       isConnected: true, // SÍ se conecta aquí
     });
@@ -37,6 +39,7 @@ export const useRoomStore = create((set, get) => ({
       messages: [],
       participants: [],
       nickname: null,
+      hashedNickname: null,
       sessionId: null,
       isConnected: false,
     });

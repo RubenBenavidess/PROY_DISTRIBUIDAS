@@ -15,6 +15,7 @@ const ChatRoomPage = () => {
     const roomInfo = useRoomStore((state) => state.roomInfo);
     const messages = useRoomStore((state) => state.messages);
     const nickname = useRoomStore((state) => state.nickname);
+    const hashedNickname = useRoomStore((state) => state.hashedNickname);
     const sessionId = useRoomStore((state) => state.sessionId);
     const isConnected = useRoomStore((state) => state.isConnected);
     
@@ -24,11 +25,11 @@ const ChatRoomPage = () => {
 
     // --- VERIFICAR SI TENEMOS DATOS VÁLIDOS ---
     useEffect(() => {
-        if (!roomInfo || !sessionId || !nickname) {
+        if (!roomInfo || !sessionId || !nickname || !hashedNickname) {
             console.warn('No room data found, redirecting to join page');
             navigate('/join', { replace: true });
         }
-    }, [roomInfo, sessionId, nickname, navigate]);
+    }, [roomInfo, sessionId, nickname, hashedNickname, navigate]);
 
     // --- EFECTO 1: Escuchar Sockets y Manejar Salida ---
     useEffect(() => {
@@ -94,6 +95,9 @@ const ChatRoomPage = () => {
     // Requisito: El clip solo si el tipo de sala lo permite
     const showAttachButton = roomInfo.type === 'text/media';
 
+    // Filtrar solo mensajes con archivos (no texto)
+    const fileMessages = messages.filter(msg => msg.contentType && msg.contentType !== 'text');
+
     return (
         <div className="chat-layout">
         {/* Columna 1: Chat (Versión Desktop: 2 Columnas) */}
@@ -116,8 +120,8 @@ const ChatRoomPage = () => {
                 <ChatBubble
                 key={msg.id || index}
                 message={msg}
-                // Compara el 'username' del mensaje con el 'nickname' guardado
-                isMe={msg.username === nickname}
+                // Compara el 'username' hasheado del mensaje con el 'hashedNickname' guardado
+                isMe={msg.username === hashedNickname}
                 />
             ))}
             </div>
@@ -133,14 +137,57 @@ const ChatRoomPage = () => {
         {/* Columna 2: Detalles (Tu Spec - Solo Desktop) */}
         <aside className="details-column">
             <h3>Usuarios Conectados</h3>
-            {/* (Aquí iría el UserList. Faltaría implementar la lógica de 'get-participants') */}
-            <p>{nickname} (Tú)</p>            
+            <div className="participants-list">
+                {/* Tu usuario */}
+                <div className="participant-item">
+                    <span className="participant-name">{nickname}</span>
+                    <span className="participant-badge">Tú</span>
+                </div>
+            </div>
+            
             {showAttachButton && (
             <>
                 <hr />
-                <h3>Archivos</h3>
-                {/* (Aquí iría la galería de archivos) */}
-                <p>No hay archivos.</p>
+                <h3>Archivos ({fileMessages.length})</h3>
+                <div className="files-list">
+                    {fileMessages.length > 0 ? (
+                        fileMessages.map((msg, idx) => {
+                            const isImage = msg.contentType && msg.contentType.startsWith('image/');
+                            const filename = msg.filename || msg.content?.split('/').pop()?.replace(/^\d+_/, '') || 'archivo';
+                            
+                            return (
+                                <div key={msg.id || idx} className="file-item">
+                                    {isImage ? (
+                                        <a href={msg.content} target="_blank" rel="noopener noreferrer" className="file-preview">
+                                            <img 
+                                                src={msg.content} 
+                                                alt={filename}
+                                                loading="lazy"
+                                            />
+                                        </a>
+                                    ) : (
+                                        <a href={msg.content} download={filename} className="file-preview file-icon-preview">
+                                            <span>📄</span>
+                                        </a>
+                                    )}
+                                    <div className="file-info">
+                                        <span className="file-name" title={filename}>{filename}</span>
+                                        <a 
+                                            href={msg.content} 
+                                            download={filename}
+                                            className="file-download-btn"
+                                            title="Descargar"
+                                        >
+                                            ⬇️
+                                        </a>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    ) : (
+                        <p className="no-files">No hay archivos.</p>
+                    )}
+                </div>
             </>
             )}
         </aside>

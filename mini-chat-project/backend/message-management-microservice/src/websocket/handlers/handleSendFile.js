@@ -63,15 +63,17 @@ function validateFileSize(fileBuffer, maxSizeMB) {
  * @param {string} hashedNickname - Hashed nickname
  * @param {string} filename - Original filename
  * @param {string} contentType - Content type detected
+ * @param {string} content - Signed URL for the file
  * @param {Date} timestamp - Message timestamp
  * @returns {Object} File data object
  */
-function buildFileData(messageId, hashedNickname, filename, contentType, timestamp) {
+function buildFileData(messageId, hashedNickname, filename, contentType, content, timestamp) {
     return {
         id: messageId,
         username: hashedNickname,
         filename,
         contentType,
+        content,
         timestamp
     };
 }
@@ -155,7 +157,8 @@ export async function handleSendFile(socket, data, callback, io) {
             result.messageId,
             nickname,
             filename,
-            'file', // Could be enhanced to get actual content type from result
+            result.contentType,
+            result.signedUrl,
             result.timestamp
         );
 
