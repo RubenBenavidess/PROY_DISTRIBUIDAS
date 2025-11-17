@@ -1,32 +1,131 @@
+import crypto from 'crypto';
 import roomService from '../../services/roomService.js';
 import messageService from '../../services/messageService.js';
-import encryptionService from '../../services/encryptionService.js';
 import { sessionCache, userNicknames, roomSockets } from '../socketHandler.js';
+
+/**
+ * Generate deterministic hash for username in a specific room
+ * @param {string} nickname - User's nickname
+ * @param {string} roomId - Room ID
+ * @returns {string} Deterministic hash
+ */
+function hashNicknameForRoom(nickname, roomId) {
+    const combined = `${nickname}:${roomId}`;
+    return crypto.createHash('sha256').update(combined).digest('hex').substring(0, 16);
+}
+
+/**
+ * Generate a unique session token
+ * @returns {string} Session token
+ */
+function generateSessionToken() {
+    return crypto.randomBytes(32).toString('hex');
+}
+
+/**
+ * Validate join request data
+ * @param {Object} data - Request data
+ * @returns {Object} Validation result {valid: boolean, error?: string}
+ */
+function validateJoinRequest(data) {
+    const { roomId, pin, nickname } = data;
+
+    if (!roomId || !pin || !nickname) {
+        return { valid: false, error: 'Missing required fields' };
+    }
+
+    if (nickname.length < 3 || nickname.length > 20) {
+        return { valid: false, error: 'Nickname must be between 3 and 20 characters' };
+    }
+
+    return { valid: true };
+}
+
+/**
+ * Store user session data
+ * @param {string} sessionId - Session ID
+ * @param {string} socketId - Socket ID
+ * @param {string} roomId - Room ID
+ * @param {string} hashedNickname - Hashed nickname
+ */
+function storeUserSession(sessionId, socketId, roomId, hashedNickname) {
+    sessionCache.set(sessionId, {
+        socketId,
+        roomId,
+        nickname: hashedNickname,
+        joinedAt: Date.now()
+    });
+
+    userNicknames.set(socketId, { roomId, nickname: hashedNickname, sessionId });
+}
+
+/**
+ * Add socket to room tracking
+ * @param {string} roomId - Room ID
+ * @param {string} socketId - Socket ID
+ */
+function addSocketToRoom(roomId, socketId) {
+    if (!roomSockets.has(roomId)) {
+        roomSockets.set(roomId, new Set());
+    }
+    roomSockets.get(roomId).add(socketId);
+}
+
+/**
+ * Notify other users in the room about new participant
+ * @param {Object} socket - Socket instance
+ * @param {string} roomId - Room ID
+ * @param {string} hashedNickname - Hashed nickname
+ * @param {number} participantCount - Current participant count
+ */
+function notifyRoomParticipants(socket, roomId, hashedNickname, participantCount) {
+    socket.to(roomId).emit('user-joined', {
+        nickname: hashedNickname,
+        timestamp: Date.now(),
+        participants: participantCount
+    });
+}
+
+/**
+ * Build successful join response
+ * @param {string} sessionId - Session ID
+ * @param {Object} roomResult - Room join result
+ * @param {Array} messages - Recent messages
+ * @returns {Object} Success response
+ */
+function buildSuccessResponse(sessionId, roomResult, messages) {
+    return {
+        success: true,
+        sessionId,
+        roomInfo: {
+            roomId: roomResult.roomId,
+            type: roomResult.roomType,
+            participants: roomResult.currentParticipants,
+            sizeLimit: roomResult.sizeLimit,
+            contentSizeLimit: roomResult.contentSizeLimit
+        },
+        messages
+    };
+}
 
 /**
  * Handle room join
  * @param {Object} socket - Socket.io socket
  * @param {Object} data - Data from client {roomId, pin, nickname}
  * @param {Function} callback - Callback to send response
-*/
+ */
 export async function handleJoinRoom(socket, data, callback) {
     try {
+        // Validate request
+        const validation = validateJoinRequest(data);
+        if (!validation.valid) {
+            return callback({
+                success: false,
+                error: validation.error
+            });
+        }
+
         const { roomId, pin, nickname } = data;
-
-        if (!roomId || !pin || !nickname) {
-            return callback({
-                success: false,
-                error: 'Missing required fields'
-            });
-        }
-
-        // Validate nickname
-        if (nickname.length < 3 || nickname.length > 20) {
-            return callback({
-                success: false,
-                error: 'Nickname must be between 3 and 20 characters'
-            });
-        }
 
         // Check if user already in a room
         if (userNicknames.has(socket.id)) {
@@ -36,64 +135,42 @@ export async function handleJoinRoom(socket, data, callback) {
             });
         }
 
-        // Generate session ID
-        const sessionId = encryptionService.generateSessionToken();
+        // Hash nickname deterministically for this room
+        const hashedNickname = hashNicknameForRoom(nickname, roomId);
 
-        // Join room
-        const result = await roomService.joinRoom(roomId, pin, nickname, sessionId);
+        // Generate session token
+        const sessionId = generateSessionToken();
 
-        if (!result.success) {
+        // Attempt to join room
+        const roomResult = await roomService.joinRoom(roomId, pin, hashedNickname, sessionId);
+
+        if (!roomResult.success) {
             return callback({
                 success: false,
-                error: result.error
+                error: roomResult.error
             });
         }
 
-        // Store session
-        sessionCache.set(sessionId, {
-            socketId: socket.id,
-            roomId,
-            nickname,
-            joinedAt: Date.now()
-        });
+        // Store session data
+        storeUserSession(sessionId, socket.id, roomId, hashedNickname);
 
-        // Store user info
-        userNicknames.set(socket.id, { roomId, nickname, sessionId });
-
-        // Add to room sockets
-        if (!roomSockets.has(roomId)) {
-            roomSockets.set(roomId, new Set());
-        }
-        roomSockets.get(roomId).add(socket.id);
+        // Track socket in room
+        addSocketToRoom(roomId, socket.id);
 
         // Join socket.io room
         socket.join(roomId);
 
-        // Get recent messages
-        const messages = await messageService.getMessages(roomId, { limit: 50 });
+        // Fetch recent messages
+        const messages = await messageService.getLatestMessages(roomId, { limit: 50 });
 
-        // Notify others
-        socket.to(roomId).emit('user-joined', {
-            nickname: encryptionService.hashUsername(nickname, roomId),
-            timestamp: Date.now(),
-            participants: result.currentParticipants
-        });
+        // Notify other participants
+        notifyRoomParticipants(socket, roomId, hashedNickname, roomResult.currentParticipants);
 
-        // Log for audit
-        console.log(`[AUDIT] User joined via WebSocket: room=${roomId}, nickname=${nickname}, socket=${socket.id}`);
+        // Audit log
+        console.log(`[AUDIT] User joined via WebSocket: room=${roomId}, hashedNickname=${hashedNickname}, socket=${socket.id}`);
 
-        callback({
-            success: true,
-            sessionId,
-            roomInfo: {
-                roomId,
-                type: result.roomType,
-                participants: result.currentParticipants,
-                sizeLimit: result.sizeLimit,
-                contentSizeLimit: result.contentSizeLimit
-            },
-            messages
-        });
+        // Send success response
+        callback(buildSuccessResponse(sessionId, roomResult, messages));
 
     } catch (error) {
         console.error('[WS] Error joining room:', error);
