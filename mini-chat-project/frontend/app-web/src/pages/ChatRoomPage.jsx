@@ -69,9 +69,14 @@ const ChatRoomPage = () => {
             .catch(err => console.error("Error enviando mensaje:", err));
     };
 
-    const handleSendFile = (file) => {
-        socketService.sendFile(file)
-            .catch(err => console.error("Error enviando archivo:", err));
+    const handleSendFile = async (file) => {
+        try {
+            await socketService.sendFile(file);
+        } catch (err) {
+            console.error("Error enviando archivo:", err);
+            // Re-lanzar el error para que MessageInput lo capture
+            throw err;
+        }
     };
 
     // --- Función para salir de la sala ---

@@ -46,7 +46,7 @@ export const MessageInput = ({ onSendMessage, onSendFile, showAttach }) => {
     return { valid: true };
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     
     if (file) {
@@ -68,8 +68,16 @@ export const MessageInput = ({ onSendMessage, onSendFile, showAttach }) => {
         return;
       }
 
-      // Si es válido, enviarlo
-      onSendFile(file);
+      // Si es válido, enviarlo y capturar errores del backend
+      try {
+        await onSendFile(file);
+      } catch (err) {
+        // Mostrar error del backend
+        setError(err.message || 'Error al enviar el archivo');
+        
+        // Limpiar después de 5 segundos
+        setTimeout(() => setError(null), 5000);
+      }
     }
     
     e.target.value = null;
