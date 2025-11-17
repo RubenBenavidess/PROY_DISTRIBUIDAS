@@ -7,8 +7,7 @@ import {
     handleTyping,
     handleDisconnect,
     handleLeaveRoom,
-    handleHeartbeat,
-    handleGetParticipants
+    handleHeartbeat
 } from './handlers/index.js';
 
 const config = {
