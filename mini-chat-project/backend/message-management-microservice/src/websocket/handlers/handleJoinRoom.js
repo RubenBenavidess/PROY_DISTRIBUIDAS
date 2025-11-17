@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import roomService from '../../services/roomService.js';
-import messageService from '../../services/messageService.js';
+import { getLatestMessages } from '../../services/messageService.js';
 import { sessionCache, userNicknames, roomSockets } from '../socketHandler.js';
 
 /**
@@ -161,7 +161,7 @@ export async function handleJoinRoom(socket, data, callback) {
         socket.join(roomId);
 
         // Fetch recent messages
-        const messages = await messageService.getLatestMessages(roomId, { limit: 50 });
+        const messages =  await getLatestMessages(roomId, { limit: 50 });
 
         // Notify other participants
         notifyRoomParticipants(socket, roomId, hashedNickname, roomResult.currentParticipants);
