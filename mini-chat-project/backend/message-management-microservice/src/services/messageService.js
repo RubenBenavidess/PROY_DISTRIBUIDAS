@@ -46,7 +46,7 @@ export async function saveMessage(messageData) {
 
 /**
  * Save multimedia message to database
- * @param {Object} messageData - Message data {roomId, username, userIP, contentType, content(fileBuffer)}
+ * @param {Object} messageData - Message data {roomId, username, userIP, content(fileBuffer), filename}
  * @returns {Object} - Saved message info {messageId, timestamp}
  */
 export async function saveMultimediaMessage(messageData) {
