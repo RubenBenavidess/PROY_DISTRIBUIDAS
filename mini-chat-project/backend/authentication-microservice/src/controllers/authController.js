@@ -3,7 +3,6 @@ import { adminLoginSchema } from "../security/zSchemes.js";
 
 export async function login(req, res, next){
     try{
-        console.log('en controlador');
         const admin = adminLoginSchema.parse(req.body);
         const token = await loginService(admin);
         res.cookie("accessToken", token, {

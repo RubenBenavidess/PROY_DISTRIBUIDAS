@@ -15,7 +15,7 @@ dotenv.config();
 
 // Configuration object
 const config = {
-    port: process.env.PORT || 3002,
+    port: process.env.MESSAGE_SERVICE_PORT || 3002,
     nodeEnv: process.env.NODE_ENV || 'development',
     corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
     rateLimit: {

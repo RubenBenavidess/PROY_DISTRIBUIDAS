@@ -9,8 +9,9 @@ import './Input.css'; // Crearemos este CSS
  * @param {string} props.value - Valor controlado
  * @param {function} props.onChange - Función de cambio
  * @param {string} props.placeholder - Placeholder
+ * @param {boolean} props.disabled - Si está deshabilitado
  */
-export const Input = ({ label, type = 'text', value, onChange, placeholder }) => {
+export const Input = ({ label, type = 'text', value, onChange, placeholder, disabled }) => {
     return (
         <div className="input-wrapper">
         <label className="input-label">{label}</label>
@@ -19,6 +20,7 @@ export const Input = ({ label, type = 'text', value, onChange, placeholder }) =>
             value={value}
             onChange={onChange}
             placeholder={placeholder}
+            disabled={disabled}
             className="minimal-input"
         />
         </div>

@@ -16,6 +16,26 @@ services:
     networks:
       - app-net
 
+  #--- Servicio de Gestión de Mensajes ---
+  message-management-microservice:
+    build:
+      context: ./message-management-microservice
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    container_name: message-management-microservice
+    env_file:
+      - ./.env
+    ports:
+      - "3002:3002" # Puerto para el servicio de mensajes
+    networks:
+      - app-net
+    depends_on:
+      - auth-api
+    volumes:
+      # Montar las llaves JWT (la pública para verificar tokens)
+      - ./authentication-microservice/src/keys/ec_public.pem:/app/keys/ec_public.pem:ro
+
+  #--- API Gateway ---
   api-gateway:
     build:
       context: ./api-gateway # La carpeta de tu Gateway
@@ -33,7 +53,7 @@ services:
       # Le dice a Docker: "No arranques el Gateway HASTA QUE
       # auth-api (y message-api) ya estén corriendo".
       - auth-api
-      # - message-api 
+      - message-management-microservice
       # - image-api
 
 networks:
