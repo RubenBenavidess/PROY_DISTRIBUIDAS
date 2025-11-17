@@ -1,13 +1,101 @@
 import roomService from '../../services/roomService.js';
-import messageService from '../../services/messageService.js';
-import encryptionService from '../../services/encryptionService.js';
+import { saveMultimediaMessage } from '../../services/messageService.js';
 import { userNicknames } from '../socketHandler.js';
 
 /**
+ * Validate file data
+ * @param {Object} data - File data
+ * @returns {Object} Validation result {valid: boolean, error?: string}
+ */
+function validateFileData(data) {
+    const { fileBuffer, filename } = data;
+
+    if (!fileBuffer || !Buffer.isBuffer(fileBuffer)) {
+        return { valid: false, error: 'Invalid file buffer' };
+    }
+
+    if (!filename || typeof filename !== 'string') {
+        return { valid: false, error: 'Filename is required' };
+    }
+
+    if (filename.trim().length === 0) {
+        return { valid: false, error: 'Filename cannot be empty' };
+    }
+
+    return { valid: true };
+}
+
+/**
+ * Validate room supports media
+ * @param {Object} room - Room info
+ * @returns {Object} Validation result {valid: boolean, error?: string}
+ */
+function validateRoomSupportsMedia(room) {
+    if (room.type !== 'text/media') {
+        return { valid: false, error: 'Room does not support file uploads' };
+    }
+    return { valid: true };
+}
+
+/**
+ * Validate file size
+ * @param {Buffer} fileBuffer - File buffer
+ * @param {number} maxSizeMB - Maximum size in MB
+ * @returns {Object} Validation result {valid: boolean, error?: string}
+ */
+function validateFileSize(fileBuffer, maxSizeMB) {
+    const fileSizeInBytes = fileBuffer.length;
+    const maxSizeInBytes = maxSizeMB * 1024 * 1024;
+
+    if (fileSizeInBytes > maxSizeInBytes) {
+        return { 
+            valid: false, 
+            error: `File too large. Maximum size is ${maxSizeMB}MB` 
+        };
+    }
+
+    return { valid: true };
+}
+
+/**
+ * Build file data for broadcasting
+ * @param {string} messageId - Message ID
+ * @param {string} hashedNickname - Hashed nickname
+ * @param {string} filename - Original filename
+ * @param {string} contentType - Content type detected
+ * @param {Date} timestamp - Message timestamp
+ * @returns {Object} File data object
+ */
+function buildFileData(messageId, hashedNickname, filename, contentType, timestamp) {
+    return {
+        id: messageId,
+        username: hashedNickname,
+        filename,
+        contentType,
+        timestamp
+    };
+}
+
+/**
+ * Broadcast file to room
+ * @param {Object} io - Socket.IO server instance
+ * @param {string} roomId - Room ID
+ * @param {Object} fileData - File data to broadcast
+ */
+function broadcastFile(io, roomId, fileData) {
+    io.to(roomId).emit('new-file', fileData);
+}
+
+/**
  * Handle file upload
+ * @param {Object} socket - Socket.io socket
+ * @param {Object} data - Data from client {fileBuffer, mimeType, filename}
+ * @param {Function} callback - Callback to send response
+ * @param {Object} io - Socket.IO server instance
  */
 export async function handleSendFile(socket, data, callback, io) {
     try {
+        // Get user info
         const userInfo = userNicknames.get(socket.id);
 
         if (!userInfo) {
@@ -17,61 +105,69 @@ export async function handleSendFile(socket, data, callback, io) {
             });
         }
 
-        const { fileBuffer, mimeType, filename } = data;
+        const { fileBuffer, filename } = data;
         const { roomId, nickname } = userInfo;
+
+        // Validate file data
+        const fileValidation = validateFileData(data);
+        if (!fileValidation.valid) {
+            return callback({
+                success: false,
+                error: fileValidation.error
+            });
+        }
 
         // Get room info
         const room = await roomService.getRoomInfo(roomId);
 
         // Check if room allows media
-        if (room.type !== 'text/media') {
+        const mediaValidation = validateRoomSupportsMedia(room);
+        if (!mediaValidation.valid) {
             return callback({
                 success: false,
-                error: 'Room does not support file uploads'
+                error: mediaValidation.error
             });
         }
 
         // Validate file size
-        if (fileBuffer.length > room.contentSizeLimit * 1024 * 1024) {
+        const sizeValidation = validateFileSize(fileBuffer, room.contentSizeLimit);
+        if (!sizeValidation.valid) {
             return callback({
                 success: false,
-                error: `File too large. Maximum size is ${room.contentSizeLimit}MB`
+                error: sizeValidation.error
             });
         }
 
+        // Get user IP
         const userIP = socket.handshake.address;
 
-        // Process file (delegates to file-verification-microservice)
-        const result = await messageService.processFileUpload(
-            Buffer.from(fileBuffer),
-            mimeType,
-            filename,
-            roomId,
+        // Save multimedia message (includes security verification - will throw error if unsafe)
+        const result = await saveMultimediaMessage({ 
+            roomId, 
+            username: nickname, 
+            userIP, 
+            content: fileBuffer, 
+            filename 
+        });
+
+        // Build file data
+        const fileData = buildFileData(
+            result.messageId,
             nickname,
-            userIP
+            filename,
+            'file', // Could be enhanced to get actual content type from result
+            result.timestamp
         );
 
-        // Broadcast file to room
-        const fileData = {
-            username: nickname,
-            hashedUsername: encryptionService.hashUsername(nickname, roomId),
-            contentType: messageService.getContentTypeFromMime(mimeType),
-            filename: filename,
-            hash: result.hash,
-            signature: result.signature,
-            size: result.size,
-            verified: result.verified,
-            timestamp: result.timestamp
-        };
+        // Broadcast to all users in room
+        broadcastFile(io, roomId, fileData);
 
-        io.to(roomId).emit('new-file', fileData);
-
-        // Log for audit
-        console.log(`[AUDIT] File sent: room=${roomId}, user=${nickname}, hash=${result.hash}`);
+        // Audit log
+        console.log(`[AUDIT] File sent: room=${roomId}, user=${nickname}, messageId=${result.messageId}`);
 
         callback({
             success: true,
-            hash: result.hash,
+            messageId: result.messageId,
             timestamp: result.timestamp
         });
 
