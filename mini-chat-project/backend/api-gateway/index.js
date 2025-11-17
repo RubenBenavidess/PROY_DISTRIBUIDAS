@@ -7,6 +7,11 @@ const helmet = require('helmet');
 
 const app = express();
 
+const corsOptions = {
+  origin: 'http://localhost:5173', // El puerto de tu frontend (Vite)
+  credentials: true // ¡ESTA ES LA LÍNEA MÁGICA!
+};
+
 // Gateway port
 const PORT = process.env.G_PORT;
 
@@ -16,7 +21,7 @@ const MESSAGE_SERVICE_URL = 'http://message-management-microservice:3002';
 
 // Middlewares
 app.use(helmet()); // Security headers
-app.use(cors()); // Enable CORS for all routes
+app.use(cors(corsOptions)); // Enable CORS for all routes
 app.use(morgan('dev')); // Logging
 
 const limiter =rateLimit({

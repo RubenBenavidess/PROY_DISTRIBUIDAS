@@ -1,9 +1,10 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-// Importa los dos guardias
+// Importa los TRES guardias
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import RoomAccessGuard from './components/auth/RoomAccessGuard'; // <-- EL NUEVO
+import RoomAccessGuard from './components/auth/RoomAccessGuard';
+import PublicRouteGuard from './components/auth/PublicRouteGuard'; // <-- EL NUEVO
 
 // Importa las páginas
 import LandingPage from './pages/LandingPage';
@@ -16,19 +17,23 @@ function App() {
     return (
         <BrowserRouter>
         <Routes>
-            {/* Rutas Públicas */}
+            {/* Ruta de Inicio (esta no necesita guardia) */}
             <Route path="/" element={<LandingPage />} />
-            <Route path="/join" element={<JoinRoomPage />} />
-            <Route path="/admin/login" element={<AdminLoginPage />} />
+
+            {/* Rutas Públicas (Protegidas de usuarios logueados) */}
+            <Route element={<PublicRouteGuard />}>
+                <Route path="/join" element={<JoinRoomPage />} />
+                <Route path="/admin/login" element={<AdminLoginPage />} />
+            </Route>
             
             {/* Rutas Protegidas (Admin) */}
             <Route element={<ProtectedRoute />}>
-            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+                <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
             </Route>
 
             {/* Ruta Protegida (Usuario de Chat) */}
             <Route element={<RoomAccessGuard />}>
-            <Route path="/room/:roomId" element={<ChatRoomPage />} />
+                <Route path="/room/:roomId" element={<ChatRoomPage />} />
             </Route>
             
             <Route path="*" element={<Navigate to="/" replace />} />
