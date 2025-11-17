@@ -25,11 +25,6 @@ const getRoomParticipantCount = (roomId) => {
         : 0;
 };
 
-const getRoomParticipants = (roomId) => {
-    if (activeSessions.has(roomId)) return [];
-    return Array.from(activeSessions.get(roomId));
-}
-
 export function isNicknameInUse(){ // JOAN
     return true;
 }
@@ -176,7 +171,7 @@ export async function getRoomInfo(roomId) {
 }
 
 /**
- * @returns 
+ * @returns rooms info
  */
 export async function getAllRooms() {
     const rooms = await Room.find().lean();
@@ -209,4 +204,14 @@ export async function deleteRoom(roomId) {
         success: true,
         message: 'Room deleted successfully'
     };
+}
+
+/**
+ * 
+ * @param {String} roomId 
+ * @returns roomParticipants info
+ */
+export async function getRoomParticipants(roomId) {
+    if (activeSessions.has(roomId)) return [];
+    return Array.from(activeSessions.get(roomId));
 }
