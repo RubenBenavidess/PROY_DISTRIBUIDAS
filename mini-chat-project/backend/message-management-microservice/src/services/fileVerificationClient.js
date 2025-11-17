@@ -3,6 +3,22 @@ import crypto from 'crypto';
 const FILE_VERIFICATION_SERVICE_URL = process.env.FILE_VERIFICATION_SERVICE_URL;
 
 /**
+ * Verify message integrity for script injection and tampering
+ * @param {string} message - The message content
+ * @returns {Object} Verification result
+ * @returns {boolean} return.isValid - Whether the message is valid
+ * @returns {string} return.reason - Reason if invalid
+ */
+export async function verifyMessageIntegrity(message) {
+    // TODO: Replace with actual file-verification-microservice call
+    return {
+        isValid: true,
+        reason: ''
+    };
+}
+
+
+/**
  * Verify file by delegating to file-verification-microservice
  * @param {Buffer} fileBuffer - The file data as a Buffer
  * @param {string} mimeType - The MIME type of the file

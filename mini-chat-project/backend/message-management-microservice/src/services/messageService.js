@@ -1,6 +1,6 @@
 import Message from '../models/Message.js';
 import Room from '../models/Room.js';
-import { verifyFile, sanitizeFile, detectContentType, healthCheck } from './fileVerificationClient.js';
+import { verifyMessageIntegrity, verifyFile, sanitizeFile, detectContentType, healthCheck } from './fileVerificationClient.js';
 import { putFromBuffer } from '../lib/s3put.js';
 import { getSignedImageUrl } from '../lib/s3get.js';
 
@@ -27,6 +27,10 @@ export async function saveMessage(messageData) {
     const room = await Room.findOne({ roomId });
     if (!room) {
         throw new Error('Room not found');
+    }
+
+    if (!(await verifyMessageIntegrity(content)).isValid) {
+        throw new Error('Message failed integrity verification');
     }
 
     const message = new Message({
