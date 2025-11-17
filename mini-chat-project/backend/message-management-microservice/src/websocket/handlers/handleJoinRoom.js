@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import roomService from '../../services/roomService.js';
+import { joinRoom } from '../../services/roomService.js';
 import { getLatestMessages } from '../../services/messageService.js';
 import { sessionCache, userNicknames, roomSockets } from '../socketHandler.js';
 
@@ -142,7 +142,7 @@ export async function handleJoinRoom(socket, data, callback) {
         const sessionId = generateSessionToken();
 
         // Attempt to join room
-        const roomResult = await roomService.joinRoom(roomId, pin, hashedNickname, sessionId);
+        const roomResult = await joinRoom({ roomId, pin }, { nickname: hashedNickname, sessionId });
 
         if (!roomResult.success) {
             return callback({
