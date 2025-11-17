@@ -56,7 +56,7 @@ export async function createRoom(roomData){
     // Generate unique room ID
     const roomId = generateRoomId();
 
-    // Generate random PIN (4-6 digits)
+    // Generate random PIN (6 digits)
     const pin = generatePIN();
 
     // Hash PIN before storing
