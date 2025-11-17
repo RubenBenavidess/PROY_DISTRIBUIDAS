@@ -19,6 +19,13 @@ router.post('/', requireAuth, createRoom);
 router.get('/', requireAuth, getAllRooms);
 
 /**
+ * @route   GET /api/rooms/:roomId/participants
+ * @desc    Get room participants
+ * @access  Public
+ */
+router.get('/:roomId/participants', getRoomParticipants);
+
+/**
  * @route   GET /api/rooms/:roomId
  * @desc    Get room info
  * @access  Public
@@ -31,12 +38,5 @@ router.get('/:roomId', getRoomInfo);
  * @access  Protected
  */
 router.delete('/:roomId', requireAuth, deleteRoom);
-
-/**
- * @route   GET /api/rooms/:roomId/participants
- * @desc    Get room participants
- * @access  Public
- */
-router.get('/:roomId/participants', getRoomParticipants);
 
 export default router;
