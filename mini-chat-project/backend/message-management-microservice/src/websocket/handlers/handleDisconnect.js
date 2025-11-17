@@ -27,7 +27,7 @@ export async function handleDisconnect(socket) {
 
         // Notify others
         socket.to(roomId).emit('user-left', {
-            nickname: nickname,
+            username: nickname,
             timestamp: Date.now(),
             participants: getRoomParticipantCount(roomId)
         });

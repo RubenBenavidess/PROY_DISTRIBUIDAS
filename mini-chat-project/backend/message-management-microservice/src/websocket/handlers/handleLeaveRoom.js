@@ -37,7 +37,7 @@ function notifyUserLeft(socket, roomId, hashedNickname) {
     const remainingParticipants = getRoomParticipantCount(roomId);
     
     socket.to(roomId).emit('user-left', {
-        nickname: hashedNickname,
+        username: hashedNickname,
         timestamp: Date.now(),
         participants: remainingParticipants
     });

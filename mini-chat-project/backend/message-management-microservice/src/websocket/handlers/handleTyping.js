@@ -13,7 +13,7 @@ export function handleTyping(socket, data) {
     const { isTyping } = data;
 
     socket.to(roomId).emit('user-typing', {
-        nickname: nickname,
+        username: nickname,
         isTyping
     });
 }

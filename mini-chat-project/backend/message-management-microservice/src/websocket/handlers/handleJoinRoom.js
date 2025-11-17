@@ -80,7 +80,7 @@ function addSocketToRoom(roomId, socketId) {
  */
 function notifyRoomParticipants(socket, roomId, hashedNickname, participantCount) {
     socket.to(roomId).emit('user-joined', {
-        nickname: hashedNickname,
+        username: hashedNickname,
         timestamp: Date.now(),
         participants: participantCount
     });
