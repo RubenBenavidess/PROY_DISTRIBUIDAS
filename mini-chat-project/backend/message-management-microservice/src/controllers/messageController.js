@@ -7,7 +7,7 @@ import { getLatestMessages } from '../services/messageService.js';
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-export async function getLatestMessages(req, res, next) {
+export async function getLatestMessagesC(req, res, next) {
     try {
         const { roomId } = req.params;
         const { numberOfMessages, skip } = req.query;

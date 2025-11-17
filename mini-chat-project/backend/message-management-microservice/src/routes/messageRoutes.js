@@ -1,5 +1,5 @@
 import express from 'express';
-import { getLatestMessages } from '../controllers/messageController.js';
+import { getLatestMessagesC } from '../controllers/messageController.js';
 
 const router = express.Router();
 
@@ -8,6 +8,6 @@ const router = express.Router();
  * @desc    Get messages for a room
  * @access  Public (should verify room access)
  */
-router.get('/:roomId', getLatestMessages);
+router.get('/:roomId', getLatestMessagesC);
 
 export default router;
