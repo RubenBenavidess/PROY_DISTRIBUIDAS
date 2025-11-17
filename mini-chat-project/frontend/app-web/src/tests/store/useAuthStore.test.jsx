@@ -5,31 +5,29 @@ import * as api from '../../services/api'
 
 // Mock the API
 vi.mock('../../services/api', () => ({
-  adminLogin: vi.fn()
+  adminLogin: vi.fn(),
+  adminLogout: vi.fn()
 }))
 
 describe('useAuthStore', () => {
   beforeEach(() => {
-    localStorage.clear()
     vi.clearAllMocks()
     
     // Reset the store
     const { result } = renderHook(() => useAuthStore())
     act(() => {
-      result.current.logout()
+      result.current.setAuthenticated(false)
     })
   })
 
-  it('should initialize with null token and not authenticated', () => {
+  it('should initialize with not authenticated', () => {
     const { result } = renderHook(() => useAuthStore())
     
-    expect(result.current.token).toBeNull()
     expect(result.current.isAuthenticated).toBe(false)
   })
 
   it('should mark as authenticated when login succeeds', async () => {
-    const mockToken = 'mock-jwt-token'
-    api.adminLogin.mockResolvedValue({ success: true, token: mockToken })
+    api.adminLogin.mockResolvedValue({ success: true })
     
     const { result } = renderHook(() => useAuthStore())
     
@@ -38,74 +36,68 @@ describe('useAuthStore', () => {
     })
     
     expect(result.current.isAuthenticated).toBe(true)
-    expect(result.current.token).toBe(mockToken)
   })
 
-  it('should clear token on logout', async () => {
-    const mockToken = 'mock-jwt-token'
-    api.adminLogin.mockResolvedValue({ success: true, token: mockToken })
-    
-    const { result } = renderHook(() => useAuthStore())
-    
-    await act(async () => {
-      await result.current.login({ username: 'admin', password: 'pass' })
-    })
-    
-    expect(result.current.isAuthenticated).toBe(true)
-    
-    act(() => {
-      result.current.logout()
-    })
-    
-    expect(result.current.token).toBeNull()
-    expect(result.current.isAuthenticated).toBe(false)
-  })
-
-  it('should persist token in localStorage', async () => {
-    const mockToken = 'test-jwt-token'
-    api.adminLogin.mockResolvedValue({ success: true, token: mockToken })
-    
-    const { result } = renderHook(() => useAuthStore())
-    
-    await act(async () => {
-      await result.current.login({ username: 'admin', password: 'pass' })
-    })
-    
-    // Check that the state was updated (localStorage is mocked)
-    expect(result.current.token).toBe(mockToken)
-    expect(result.current.isAuthenticated).toBe(true)
-    
-    // Verify localStorage.setItem was called
-    expect(localStorage.setItem).toHaveBeenCalled()
-  })
-
-  it('should handle multiple login/logout cycles', async () => {
-    const mockToken1 = 'token1'
-    const mockToken2 = 'token2'
+  it('should clear authentication on logout', async () => {
+    api.adminLogin.mockResolvedValue({ success: true })
+    api.adminLogout.mockResolvedValue({ success: true })
     
     const { result } = renderHook(() => useAuthStore())
     
     // First login
-    api.adminLogin.mockResolvedValue({ success: true, token: mockToken1 })
+    await act(async () => {
+      await result.current.login({ username: 'admin', password: 'pass' })
+    })
+    
+    expect(result.current.isAuthenticated).toBe(true)
+    
+    // Then logout
+    await act(async () => {
+      await result.current.logout()
+    })
+    
+    expect(result.current.isAuthenticated).toBe(false)
+  })
+
+  it('should allow setting authentication state directly', () => {
+    const { result } = renderHook(() => useAuthStore())
+    
+    act(() => {
+      result.current.setAuthenticated(true)
+    })
+    
+    expect(result.current.isAuthenticated).toBe(true)
+    
+    act(() => {
+      result.current.setAuthenticated(false)
+    })
+    
+    expect(result.current.isAuthenticated).toBe(false)
+  })
+
+  it('should handle multiple login/logout cycles', async () => {
+    api.adminLogin.mockResolvedValue({ success: true })
+    api.adminLogout.mockResolvedValue({ success: true })
+    
+    const { result } = renderHook(() => useAuthStore())
+    
+    // First login
     await act(async () => {
       await result.current.login({ username: 'admin', password: 'pass' })
     })
     expect(result.current.isAuthenticated).toBe(true)
-    expect(result.current.token).toBe(mockToken1)
     
     // Logout
-    act(() => {
-      result.current.logout()
+    await act(async () => {
+      await result.current.logout()
     })
     expect(result.current.isAuthenticated).toBe(false)
     
     // Second login
-    api.adminLogin.mockResolvedValue({ success: true, token: mockToken2 })
     await act(async () => {
       await result.current.login({ username: 'admin', password: 'pass' })
     })
     expect(result.current.isAuthenticated).toBe(true)
-    expect(result.current.token).toBe(mockToken2)
   })
 
   it('should handle login failure', async () => {
@@ -121,7 +113,26 @@ describe('useAuthStore', () => {
       }
     })
     
-    expect(result.current.token).toBeNull()
+    expect(result.current.isAuthenticated).toBe(false)
+  })
+
+  it('should handle logout failure gracefully', async () => {
+    api.adminLogin.mockResolvedValue({ success: true })
+    api.adminLogout.mockRejectedValue(new Error('Server error'))
+    
+    const { result } = renderHook(() => useAuthStore())
+    
+    // Login first
+    await act(async () => {
+      await result.current.login({ username: 'admin', password: 'pass' })
+    })
+    expect(result.current.isAuthenticated).toBe(true)
+    
+    // Logout should clear state even if API fails
+    await act(async () => {
+      await result.current.logout()
+    })
+    
     expect(result.current.isAuthenticated).toBe(false)
   })
 })

@@ -20,12 +20,13 @@ describe('ChatBubble Component', () => {
 
   it('should render username when isMe is false', () => {
     render(<ChatBubble {...defaultProps} />)
-    expect(screen.getByText('TestUser')).toBeInTheDocument()
+    // ChatBubble shows "Usuario TestUs" for hashed usernames
+    expect(screen.getByText(/Usuario TestUs/i)).toBeInTheDocument()
   })
 
   it('should render timestamp', () => {
     const { container } = render(<ChatBubble {...defaultProps} />)
-    const timestamp = container.querySelector('.timestamp')
+    const timestamp = container.querySelector('.message-time')
     expect(timestamp).toBeInTheDocument()
   })
 

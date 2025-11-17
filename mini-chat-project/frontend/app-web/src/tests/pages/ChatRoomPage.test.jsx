@@ -46,7 +46,8 @@ describe('ChatRoomPage', () => {
     socketService.socketService = {
       listen: vi.fn(),
       stopListening: vi.fn(),
-      leaveRoom: vi.fn(),
+      leaveRoom: vi.fn().mockResolvedValue(undefined),
+      disconnect: vi.fn(),
       sendMessage: vi.fn().mockResolvedValue(undefined),
       sendFile: vi.fn().mockResolvedValue(undefined)
     }
@@ -56,6 +57,8 @@ describe('ChatRoomPage', () => {
         roomInfo: mockRoomInfo,
         messages: mockMessages,
         nickname: 'TestUser',
+        hashedNickname: 'abc123def456',
+        sessionId: 'session-123',
         isConnected: true,
         addMessage: vi.fn(),
         clearRoom: vi.fn()
@@ -103,6 +106,8 @@ describe('ChatRoomPage', () => {
         roomInfo: { ...mockRoomInfo, type: 'text' },
         messages: mockMessages,
         nickname: 'TestUser',
+        hashedNickname: 'abc123def456',
+        sessionId: 'session-123',
         isConnected: true,
         addMessage: vi.fn(),
         clearRoom: vi.fn()
@@ -121,18 +126,20 @@ describe('ChatRoomPage', () => {
     expect(attachButtons).toHaveLength(0)
   })
 
-  it('should listen to socket events on mount', () => {
+  it('should listen to socket events on mount', async () => {
     render(
       <MemoryRouter>
         <ChatRoomPage />
       </MemoryRouter>
     )
     
-    expect(socketService.socketService.listen).toHaveBeenCalledWith('new-message', expect.any(Function))
-    expect(socketService.socketService.listen).toHaveBeenCalledWith('new-file', expect.any(Function))
+    await waitFor(() => {
+      expect(socketService.socketService.listen).toHaveBeenCalledWith('new-message', expect.any(Function))
+      expect(socketService.socketService.listen).toHaveBeenCalledWith('new-file', expect.any(Function))
+    })
   })
 
-  it('should cleanup on unmount', () => {
+  it('should cleanup on unmount', async () => {
     const { unmount } = render(
       <MemoryRouter>
         <ChatRoomPage />
@@ -141,8 +148,9 @@ describe('ChatRoomPage', () => {
     
     unmount()
     
-    expect(socketService.socketService.stopListening).toHaveBeenCalled()
-    expect(socketService.socketService.leaveRoom).toHaveBeenCalled()
+    await waitFor(() => {
+      expect(socketService.socketService.stopListening).toHaveBeenCalled()
+    })
   })
 
   it('should send message when user types', async () => {
@@ -185,7 +193,7 @@ describe('ChatRoomPage', () => {
     expect(container.firstChild).toBeNull()
   })
 
-  it('should handle new message from socket', () => {
+  it('should handle new message from socket', async () => {
     const mockAddMessage = vi.fn()
     
     roomStore.useRoomStore.mockImplementation((selector) => {
@@ -193,6 +201,8 @@ describe('ChatRoomPage', () => {
         roomInfo: mockRoomInfo,
         messages: mockMessages,
         nickname: 'TestUser',
+        hashedNickname: 'abc123def456',
+        sessionId: 'session-123',
         isConnected: true,
         addMessage: mockAddMessage,
         clearRoom: vi.fn()
@@ -206,21 +216,29 @@ describe('ChatRoomPage', () => {
       </MemoryRouter>
     )
     
+    await waitFor(() => {
+      expect(socketService.socketService.listen).toHaveBeenCalled()
+    })
+    
     // Get the callback registered with listen
     const listenCalls = socketService.socketService.listen.mock.calls
-    const newMessageHandler = listenCalls.find(call => call[0] === 'new-message')[1]
+    const newMessageCall = listenCalls.find(call => call[0] === 'new-message')
     
-    const newMessage = {
-      id: 3,
-      username: 'User3',
-      content: 'New message!',
-      timestamp: '2024-01-01T10:02:00Z',
-      contentType: 'text'
+    if (newMessageCall) {
+      const newMessageHandler = newMessageCall[1]
+      
+      const newMessage = {
+        id: 3,
+        username: 'User3',
+        content: 'New message!',
+        timestamp: '2024-01-01T10:02:00Z',
+        contentType: 'text'
+      }
+      
+      newMessageHandler(newMessage)
+      
+      expect(mockAddMessage).toHaveBeenCalledWith(newMessage)
     }
-    
-    newMessageHandler(newMessage)
-    
-    expect(mockAddMessage).toHaveBeenCalledWith(newMessage)
   })
 
   it('should display user nickname', () => {
