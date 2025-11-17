@@ -18,15 +18,26 @@ const generatePIN = () => {
 };
 
 // Participant Logic
-
-const getRoomParticipantCount = (roomId) => {
-    return activeSessions.has(roomId) 
-        ? activeSessions.get(roomId).size 
-        : 0;
+export function getRoomParticipantCount(roomId) {
+    // activeSessions is a Map: socketId -> { roomId, nickname, sessionId }
+    // We need to count how many sessions belong to this roomId
+    let count = 0;
+    for (const [socketId, sessionData] of activeSessions.entries()) {
+        if (sessionData.roomId === roomId) {
+            count++;
+        }
+    }
+    return count;
 };
 
-export function isNicknameInUse(){ // JOAN
-    return true;
+export function isNicknameInUse(nickname, roomId) {    
+    // Iterate through all active sessions to check if nickname is already in use in the specified room
+    for (const [socketId, sessionData] of activeSessions.entries()) {
+        if (sessionData.roomId === roomId && sessionData.nickname === nickname) {
+            return true;
+        }
+    }
+    return false;
 }
 
 
@@ -54,7 +65,7 @@ export async function createRoom(roomData){
     // Create room
     const room = new Room({
         roomId,
-        hashedPin,
+        pin: hashedPin,
         type,
         sizeLimit,
         title,
@@ -100,14 +111,14 @@ export async function joinRoom(roomData, userData){
     // Check room capacity
     const currentParticipants = getRoomParticipantCount(roomId);
 
-    if (!room.compareLimit(currentParticipants)) throw new Error('Room is full');
+    if (!room.canAddMore(currentParticipants)) throw new Error('Room is full');
 
     // Check nickname uniqueness in room
-    if (isNicknameInUse()) throw new Error('Nickname already in use in this room');
+    if (isNicknameInUse(nickname, roomId)) throw new Error('Nickname already in use in this room');
     
-    // Add session to room
-    if (!activeSessions.has(roomId)) activeSessions.set(roomId, new Set());
-    activeSessions.get(roomId).add(sessionId);
+    // Note: Session is added to activeSessions (userNicknames) in handleJoinRoom via storeUserSession
+    // activeSessions structure: socketId -> { roomId, nickname, sessionId }
+    // We don't add it here because we don't have the socketId at this layer
 
     // Log for audit
     console.log(`[AUDIT] User joined room: ${roomId}, nickname: ${nickname}, session: ${sessionId} at ${new Date().toISOString()}`);
@@ -130,15 +141,11 @@ export async function joinRoom(roomData, userData){
  * @returns remainingParticipants info
  */
 export async function leaveRoom(roomId, sessionId, nickname) {
-    if (activeSessions.has(roomId)) {
-        activeSessions.get(roomId).delete(sessionId);
-
-        // Clean up empty room sessions
-        if (activeSessions.get(roomId).size === 0) {
-            activeSessions.delete(roomId);
-        }
-    }
-
+    // activeSessions is a Map: socketId -> { roomId, nickname, sessionId }
+    // We need to find and remove the entry with matching sessionId
+    // Note: This is typically called from handleLeaveRoom which already manages activeSessions
+    // So this function doesn't need to modify activeSessions directly
+    
     // Log for audit
     console.log(`[AUDIT] User left room: ${roomId}, nickname: ${nickname}, session: ${sessionId} at ${new Date().toISOString()}`);
 
@@ -194,8 +201,8 @@ export async function deleteRoom(roomId) {
 
     if (!room) throw new Error('Room not found');
 
-    // Clear active sessions
-    activeSessions.delete(roomId);
+    // Note: activeSessions cleanup is handled by the websocket layer
+    // when users are disconnected or the room is closed
 
     // Log for audit
     console.log(`[AUDIT] Room deleted: ${roomId} at ${new Date().toISOString()}`);
@@ -212,6 +219,19 @@ export async function deleteRoom(roomId) {
  * @returns roomParticipants info
  */
 export async function getRoomParticipants(roomId) {
-    if (activeSessions.has(roomId)) return [];
-    return Array.from(activeSessions.get(roomId));
+    // activeSessions is a Map: socketId -> { roomId, nickname, sessionId }
+    // We need to find all participants in this room
+    const participants = [];
+    
+    for (const [socketId, sessionData] of activeSessions.entries()) {
+        if (sessionData.roomId === roomId) {
+            participants.push({
+                socketId,
+                nickname: sessionData.nickname,
+                sessionId: sessionData.sessionId
+            });
+        }
+    }
+    
+    return participants;
 }
