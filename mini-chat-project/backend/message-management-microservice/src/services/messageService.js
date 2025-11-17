@@ -1,13 +1,13 @@
 import Message from '../models/Message.js';
 import Room from '../models/Room.js';
-import { verifyFile, sanitizeFile, detectContentType } from './fileVerificationClient.js';
+import { verifyFile, sanitizeFile, detectContentType, healthCheck } from './fileVerificationClient.js';
 import { putFromBuffer } from '../lib/s3put.js';
 
 /**
  * Check file verification service availability
  */
 export async function checkFileVerificationService() {
-    const isAvailable = await fileVerificationClient.healthCheck();
+    const isAvailable = healthCheck();
     if (isAvailable) {
         console.log('File verification service is available');
     } else {
@@ -61,13 +61,13 @@ export async function saveMultimediaMessage(messageData) {
         throw new Error('Invalid content type for text room');
     }
 
-    const contentType = await detectContentType(content);
+    const contentType = detectContentType(content);
 
-    if(!(await verifyFile(content, contentType, filename)).isSafe){
+    if(!verifyFile(content, contentType, filename).isSafe){
         throw new Error('File failed security verification');
     }
 
-    const sanitizedBuffer = await sanitizeFile(content, contentType, filename);
+    const sanitizedBuffer = sanitizeFile(content, contentType, filename);
 
     const url = `messages/${roomId}/${Date.now()}_${filename}`;
 
