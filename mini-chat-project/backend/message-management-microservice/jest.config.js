@@ -1,0 +1,33 @@
+export default {
+    testEnvironment: 'node',
+    transform: {},
+    moduleNameMapper: {
+        '^(\\.{1,2}/.*)\\.js$': '$1',
+    },
+    testMatch: [
+        '**/tests/**/*.test.js',
+        '**/?(*.)+(spec|test).js'
+    ],
+    collectCoverageFrom: [
+        'src/**/*.js',
+        '!src/server.js',
+        '!**/node_modules/**',
+        '!**/tests/**'
+    ],
+    coverageThreshold: {
+        global: {
+            branches: 70,
+            functions: 70,
+            lines: 70,
+            statements: 70
+        }
+    },
+    coverageReporters: ['text', 'lcov', 'html'],
+    setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+    clearMocks: true,
+    resetMocks: true,
+    restoreMocks: true,
+    verbose: true,
+    testTimeout: 10000,
+    injectGlobals: true
+};
