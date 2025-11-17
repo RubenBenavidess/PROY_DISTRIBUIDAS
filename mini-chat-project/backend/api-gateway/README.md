@@ -233,20 +233,6 @@ Configurar timeouts para evitar peticiones colgadas:
 ## 📊 Métricas y Performance
 
 ### Rate Limiting
-
-Se puede agregar rate limiting con `express-rate-limit`:
-
-```javascript
-const rateLimit = require('express-rate-limit')
-
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100 // máximo 100 peticiones por ventana
-})
-
-app.use('/api', limiter)
-```
-
 ### Caché
 
 Para endpoints que no cambian frecuentemente:
