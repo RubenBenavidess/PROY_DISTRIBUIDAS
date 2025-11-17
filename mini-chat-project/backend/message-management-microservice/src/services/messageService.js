@@ -2,6 +2,7 @@ import Message from '../models/Message.js';
 import Room from '../models/Room.js';
 import { verifyFile, sanitizeFile, detectContentType, healthCheck } from './fileVerificationClient.js';
 import { putFromBuffer } from '../lib/s3put.js';
+import { getSignedImageUrl } from '../lib/s3get.js';
 
 /**
  * Check file verification service availability
@@ -94,7 +95,7 @@ export async function saveMultimediaMessage(messageData) {
  * Get latest messages for a room with pagination
  * @param {String} roomId - Room ID
  * @param {Object} options - Pagination options {limit, skip}
- * @returns {Array} - List of messages
+ * @returns {Array} - List of messages with signed URLs for multimedia content
  */
 export async function getLatestMessages(roomId, options = {}) {
     try {
@@ -109,7 +110,28 @@ export async function getLatestMessages(roomId, options = {}) {
             .skip(skip)
             .lean();
 
-        return messages;
+        // Generate signed URLs for non-text messages
+        const messagesWithSignedUrls = await Promise.all(
+            messages.map(async (message) => {
+                // If contentType is not 'text', generate a signed URL
+                if (message.contentType !== 'text') {
+                    try {
+                        const signedUrl = await getSignedImageUrl(message.content);
+                        return {
+                            ...message,
+                            content: signedUrl
+                        };
+                    } catch (error) {
+                        console.error(`Error generating signed URL for message ${message._id}:`, error);
+                        // Return message with original content if URL generation fails
+                        return message;
+                    }
+                }
+                return message;
+            })
+        );
+
+        return messagesWithSignedUrls;
     } catch (error) {
         console.error('Error retrieving messages:', error);
         throw error;
