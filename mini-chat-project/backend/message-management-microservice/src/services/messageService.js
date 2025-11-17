@@ -17,7 +17,7 @@ export async function checkFileVerificationService() {
 
 /**
  * Save message to database
- * @param {Object} messageData - Message data {roomId, username, userIP, contentType, content}
+ * @param {Object} messageData - Message data {roomId, username, userIP, content}
  * @returns {Object} - Saved message info {messageId, timestamp}
  */
 export async function saveMessage(messageData) {
@@ -32,7 +32,7 @@ export async function saveMessage(messageData) {
         roomId,
         username,
         userIP,
-        contentType: 'text/plain',
+        contentType: 'text',
         content: content
     });
 
