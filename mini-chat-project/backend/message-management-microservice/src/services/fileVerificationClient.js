@@ -11,6 +11,87 @@ const FILE_VERIFICATION_SERVICE_URL = process.env.FILE_VERIFICATION_SERVICE_URL;
  */
 export async function verifyMessageIntegrity(message) {
     // TODO: Replace with actual file-verification-microservice call
+    // For now implementing comprehensive XSS validation
+    
+    if (!message || typeof message !== 'string') {
+        return {
+            isValid: false,
+            reason: 'Invalid message format'
+        };
+    }
+
+    // Check for script tags (including obfuscated variants)
+    const scriptTagPattern = /<\s*script[^>]*>[\s\S]*?<\s*\/\s*script\s*>/gi;
+    if (scriptTagPattern.test(message)) {
+        return {
+            isValid: false,
+            reason: 'Message contains script tags'
+        };
+    }
+
+    // Check for iframe injection
+    const iframePattern = /<\s*iframe[^>]*>/gi;
+    if (iframePattern.test(message)) {
+        return {
+            isValid: false,
+            reason: 'Message contains iframe tags'
+        };
+    }
+
+    // Check for inline event handlers (onclick, onerror, onload, etc.)
+    const eventHandlerPattern = /\s+on\w+\s*=\s*["'][^"']*["']/gi;
+    if (eventHandlerPattern.test(message)) {
+        return {
+            isValid: false,
+            reason: 'Message contains inline event handlers'
+        };
+    }
+
+    // Check for javascript: protocol
+    const javascriptProtocolPattern = /javascript\s*:/gi;
+    if (javascriptProtocolPattern.test(message)) {
+        return {
+            isValid: false,
+            reason: 'Message contains javascript protocol'
+        };
+    }
+
+    // Check for data: protocol with script content
+    const dataProtocolPattern = /data\s*:\s*text\s*\/\s*html/gi;
+    if (dataProtocolPattern.test(message)) {
+        return {
+            isValid: false,
+            reason: 'Message contains potentially malicious data URI'
+        };
+    }
+
+    // Check for object and embed tags
+    const objectEmbedPattern = /<\s*(object|embed)[^>]*>/gi;
+    if (objectEmbedPattern.test(message)) {
+        return {
+            isValid: false,
+            reason: 'Message contains object or embed tags'
+        };
+    }
+
+    // Check for base64 encoded script attempts
+    const base64ScriptPattern = /(?:PHNjcmlwdD4|PHNjcmlwdCBzcmM9|PGlmcmFtZQ==)/gi;
+    if (base64ScriptPattern.test(message)) {
+        return {
+            isValid: false,
+            reason: 'Message contains base64 encoded malicious content'
+        };
+    }
+
+    // Check for SQL injection patterns
+    const sqlInjectionPattern = /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE|UNION|DECLARE)\b)/gi;
+    if (sqlInjectionPattern.test(message)) {
+        return {
+            isValid: false,
+            reason: 'Message contains potential SQL injection patterns'
+        };
+    }
+
     return {
         isValid: true,
         reason: ''
