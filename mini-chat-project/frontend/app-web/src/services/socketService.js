@@ -5,6 +5,7 @@ import { io } from 'socket.io-client';
 const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 class SocketService {
     socket = null;
+    disconnectCallback = null;
 
     connect(token) {
         // Conectamos al socket (aún no nos unimos a una sala)
@@ -19,11 +20,31 @@ class SocketService {
 
         this.socket.on('disconnect', (reason) => {
             console.log('Socket desconectado:', reason);
+            
+            // Llamar al callback de desconexión si existe
+            if (this.disconnectCallback) {
+                this.disconnectCallback(reason);
+            }
         });
 
         this.socket.on('connect_error', (err) => {
             console.error('Socket error de conexión:', err.message);
         });
+    }
+
+    /**
+     * Registrar callback para cuando se desconecte el socket
+     * @param {Function} callback - Función a llamar cuando se desconecte
+     */
+    onDisconnect(callback) {
+        this.disconnectCallback = callback;
+    }
+
+    /**
+     * Limpiar callback de desconexión
+     */
+    offDisconnect() {
+        this.disconnectCallback = null;
     }
 
     disconnect() {

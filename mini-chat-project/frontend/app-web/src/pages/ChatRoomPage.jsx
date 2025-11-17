@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRoomStore } from '../store/roomStore';
 import { socketService } from '../services/socketService';
@@ -10,6 +10,7 @@ import './ChatRoomPage.css';
 const ChatRoomPage = () => {
     const navigate = useNavigate();
     const chatBodyRef = useRef(null); // Ref para hacer scroll automático
+    const [disconnectMessage, setDisconnectMessage] = useState(null);
 
     // Saca toda la data del "cerebro" (roomStore)
     const roomInfo = useRoomStore((state) => state.roomInfo);
@@ -45,16 +46,33 @@ const ChatRoomPage = () => {
             console.log('Nuevo archivo recibido:', fileMsg);
             addMessage(fileMsg);
         };
+
+        // Manejar desconexión del servidor
+        const handleDisconnect = (reason) => {
+            // Solo mostrar mensaje si fue desconectado por el servidor
+            if (reason === 'io server disconnect') {
+                setDisconnectMessage('Desconectado del servidor');
+                
+                // Limpiar estado y redirigir después de 3 segundos
+                setTimeout(() => {
+                    clearRoom();
+                    socketService.disconnect();
+                    navigate('/join', { replace: true });
+                }, 3000);
+            }
+        };
         
         socketService.listen('new-message', handleNewMessage);
         socketService.listen('new-file', handleNewFile);
+        socketService.onDisconnect(handleDisconnect);
 
         // --- Función de LIMPIEZA ---
         return () => {
             socketService.stopListening('new-message', handleNewMessage);
             socketService.stopListening('new-file', handleNewFile);
+            socketService.offDisconnect();
         };
-    }, [roomInfo, sessionId, addMessage]);
+    }, [roomInfo, sessionId, addMessage, clearRoom, navigate]);
 
     // --- EFECTO 2: Scroll automático al fondo ---
     useEffect(() => {
@@ -105,6 +123,17 @@ const ChatRoomPage = () => {
 
     return (
         <div className="chat-layout">
+        {/* Mensaje de desconexión */}
+        {disconnectMessage && (
+            <div className="disconnect-overlay">
+                <div className="disconnect-message">
+                    <span className="disconnect-icon">⚠️</span>
+                    <h3>{disconnectMessage}</h3>
+                    <p>Redirigiendo...</p>
+                </div>
+            </div>
+        )}
+        
         {/* Columna 1: Chat (Versión Desktop: 2 Columnas) */}
         <div className="chat-column">
             
