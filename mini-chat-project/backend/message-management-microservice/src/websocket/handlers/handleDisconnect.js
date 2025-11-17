@@ -1,5 +1,5 @@
-import roomService from '../../services/roomService.js';
-import encryptionService from '../../services/encryptionService.js';
+import { leaveRoom } from '../../services/roomService.js';
+import { getRoomParticipantCount } from '../../services/roomService.js';
 import { sessionCache, userNicknames, roomSockets } from '../socketHandler.js';
 
 /**
@@ -12,7 +12,7 @@ export async function handleDisconnect(socket) {
         const { roomId, nickname, sessionId } = userInfo;
 
         // Leave room
-        await roomService.leaveRoom(roomId, sessionId, nickname);
+        await leaveRoom(roomId, sessionId, nickname);
 
         // Remove from tracking
         userNicknames.delete(socket.id);
@@ -27,7 +27,7 @@ export async function handleDisconnect(socket) {
 
         // Notify others
         socket.to(roomId).emit('user-left', {
-            hashedUsername: encryptionService.hashUsername(nickname, roomId),
+            hashedUsername: nickname,
             timestamp: Date.now(),
             participants: roomService.getRoomParticipantCount(roomId)
         });
