@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { joinRoom } from '../../services/roomService.js';
 import { getLatestMessages } from '../../services/messageService.js';
-import { sessionCache, userNicknames, roomSockets } from '../socketHandler.js';
+import { sessionCache, userNicknames, roomSockets, updateIPConnectionRoom } from '../socketHandler.js';
 
 /**
  * Generate deterministic hash for username in a specific room
@@ -156,6 +156,9 @@ export async function handleJoinRoom(socket, data, callback) {
 
         // Track socket in room
         addSocketToRoom(roomId, socket.id);
+
+        // Update IP connection room tracking
+        updateIPConnectionRoom(socket.id, roomId);
 
         // Join socket.io room
         socket.join(roomId);
