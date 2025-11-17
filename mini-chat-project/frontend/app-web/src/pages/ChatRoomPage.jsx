@@ -15,40 +15,45 @@ const ChatRoomPage = () => {
     const roomInfo = useRoomStore((state) => state.roomInfo);
     const messages = useRoomStore((state) => state.messages);
     const nickname = useRoomStore((state) => state.nickname);
+    const sessionId = useRoomStore((state) => state.sessionId);
     const isConnected = useRoomStore((state) => state.isConnected);
     
     // Leemos las acciones (funciones) del store
     const addMessage = useRoomStore((state) => state.addMessage);
     const clearRoom = useRoomStore((state) => state.clearRoom);
 
+    // --- VERIFICAR SI TENEMOS DATOS VÁLIDOS ---
+    useEffect(() => {
+        if (!roomInfo || !sessionId || !nickname) {
+            console.warn('No room data found, redirecting to join page');
+            navigate('/join', { replace: true });
+        }
+    }, [roomInfo, sessionId, nickname, navigate]);
+
     // --- EFECTO 1: Escuchar Sockets y Manejar Salida ---
     useEffect(() => {
+        if (!roomInfo || !sessionId) return; // No hacer nada si no hay datos
 
         // --- Suscribirse a eventos del socket ---
         const handleNewMessage = (msg) => {
-        addMessage(msg);
-        };
-        const handleNewFile = (fileMsg) => {
-        addMessage(fileMsg); // Tu backend los manda con estructura similar
+            console.log('Nuevo mensaje recibido:', msg);
+            addMessage(msg);
         };
         
-        // (Añade 'user-joined', 'user-left' si los necesitas)
+        const handleNewFile = (fileMsg) => {
+            console.log('Nuevo archivo recibido:', fileMsg);
+            addMessage(fileMsg);
+        };
         
         socketService.listen('new-message', handleNewMessage);
         socketService.listen('new-file', handleNewFile);
 
         // --- Función de LIMPIEZA ---
-        // Esto se ejecuta cuando el componente se destruye (sales de la página)
         return () => {
-        // Deja de escuchar
-        socketService.stopListening('new-message', handleNewMessage);
-        socketService.stopListening('new-file', handleNewFile);
-        
-        // Abandona la sala y limpia el store
-        socketService.leaveRoom();
-        clearRoom();
+            socketService.stopListening('new-message', handleNewMessage);
+            socketService.stopListening('new-file', handleNewFile);
         };
-    }, [isConnected, navigate, addMessage, clearRoom]);
+    }, [roomInfo, sessionId, addMessage]);
 
     // --- EFECTO 2: Scroll automático al fondo ---
     useEffect(() => {
@@ -60,12 +65,25 @@ const ChatRoomPage = () => {
     // --- Funciones para mandar datos ---
     const handleSendMessage = (text) => {
         socketService.sendMessage(text)
-        .catch(err => console.error("Error enviando mensaje:", err));
+            .catch(err => console.error("Error enviando mensaje:", err));
     };
 
     const handleSendFile = (file) => {
         socketService.sendFile(file)
-        .catch(err => console.error("Error enviando archivo:", err));
+            .catch(err => console.error("Error enviando archivo:", err));
+    };
+
+    // --- Función para salir de la sala ---
+    const handleLeaveRoom = async () => {
+        try {
+            await socketService.leaveRoom();
+        } catch (err) {
+            console.error('Error leaving room:', err);
+        } finally {
+            clearRoom();
+            socketService.disconnect();
+            navigate('/join', { replace: true });
+        }
     };
 
     // Si no hay info (aún cargando o error), no muestra nada
@@ -83,11 +101,13 @@ const ChatRoomPage = () => {
             
             {/* Header (Tu Spec) */}
             <header className="chat-header">
-            <div className="header-info">
-                <h2>{roomInfo.title}</h2>
-                <span><span className="lock-icon">🔒</span> Cifrado</span>
-            </div>
-            {/* (Aquí iría el botón de usuarios en móvil) */}
+                <div className="header-info">
+                    <h2>{roomInfo.title}</h2>
+                    <span><span className="lock-icon">🔒</span> Cifrado</span>
+                </div>
+                <button onClick={handleLeaveRoom} className="leave-button">
+                    Salir
+                </button>
             </header>
 
             {/* Cuerpo del Chat */}
@@ -114,9 +134,7 @@ const ChatRoomPage = () => {
         <aside className="details-column">
             <h3>Usuarios Conectados</h3>
             {/* (Aquí iría el UserList. Faltaría implementar la lógica de 'get-participants') */}
-            <p>{nickname} (Tú)</p>
-            <p>Usuario 2 (Placeholder)</p>
-            
+            <p>{nickname} (Tú)</p>            
             {showAttachButton && (
             <>
                 <hr />

@@ -19,27 +19,61 @@ const JoinRoomPage = () => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
-    socketService.connect();
+    
+    // Validar campos
+    if (!roomId || !pin || !nickname) {
+      setError('Todos los campos son requeridos');
+      setIsLoading(false);
+      return;
+    }
 
     try {
+      // Conectar socket antes de unirse
+      socketService.connect();
+      
+      console.log('Intentando unirse a la sala:', { roomId, pin, nickname });
+      
+      // Intentar unirse a la sala
       const data = await socketService.joinRoom({ roomId, pin, nickname });
+      
+      console.log('Respuesta de joinRoom:', data);
+      
+      // Guardar datos en el store
       setInitialData({
         roomInfo: data.roomInfo,
         messages: data.messages,
         nickname: nickname,
         sessionId: data.sessionId,
       });
+      
       setIsLoading(false);
+      
+      // Navegar a la sala
+      console.log('Navegando a:', `/room/${data.roomInfo.roomId}`);
       navigate(`/room/${data.roomInfo.roomId}`);
+      
     } catch (err) {
+      console.error('Error al unirse a la sala:', err);
       setIsLoading(false);
-      setError(err.message || 'Error al unirse a la sala');
+      setError(err.message || 'Error al unirse a la sala. Verifica los datos e intenta de nuevo.');
+      // Desconectar el socket en caso de error
+      socketService.disconnect();
     }
   };
 
   return (
     <div className="join-page-container">
+      {/* Botón para volver atrás */}
+        <button 
+          className="back-button" 
+          onClick={() => navigate('/')}
+          type="button"
+        >
+          ← Volver
+        </button>
       <div className="join-form-wrapper">
+        
+
         <h1 className="join-title">Unirse a la Sala</h1>
         <p className="join-subtitle">Ingresa los datos para acceder al chat.</p>
         <form onSubmit={handleSubmit}>

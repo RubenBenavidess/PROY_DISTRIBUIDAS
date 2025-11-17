@@ -1,59 +1,49 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { adminLogin } from '../services/api'; // Importamos la API que ya creamos
+import { adminLogin, adminLogout } from '../services/api';
 
-export const useAuthStore = create(
-    persist(
-        (set, get) => ({
-        token: null,       // El JWT del admin
-        // Borramos el campo "admin", tu backend no lo devuelve
-        isAuthenticated: false, // ¿Está logueado?
+export const useAuthStore = create((set) => ({
+    isAuthenticated: false, // Estado de autenticación
 
-        /**
-         * Acción: Login
-         * Llama a la API, y si tiene éxito, guarda el token.
-         * Basado 100% en tu authService.js
-         */
-        login: async (credentials) => {
-            try {
-            // Llama a la API (api.js -> gateway -> auth-microservice)
+    /**
+     * Acción: Login
+     * El token se maneja en cookies (httpOnly), solo guardamos el estado
+     */
+    login: async (credentials) => {
+        try {
+            // Llama a la API (el token se guarda automáticamente en la cookie)
             const data = await adminLogin(credentials);
 
-            // Tu backend devuelve { success: true, token: "..." }
-            if (data.success && data.token) {
-                set({
-                token: data.token,
-                isAuthenticated: true,
-                });
+            if (data.success) {
+                set({ isAuthenticated: true });
             } else {
-                // Si no viene el token, algo falló
                 throw new Error('Respuesta de login inválida');
             }
-
-            } catch (error) {
-            // Si el login falla (ej: "Invalid Credentials"), limpiamos todo
-            set({
-                token: null,
-                isAuthenticated: false,
-            });
-            throw error; // Dejamos que la página de login muestre el error
-            }
-        },
-
-        /**
-         * Acción: Logout
-         * Limpia el estado y el localStorage.
-         */
-        logout: () => {
-            set({
-            token: null,
-            isAuthenticated: false,
-            });
-        },
-        }),
-        {
-        name: 'admin-auth-storage', // Nombre en localStorage
-        storage: createJSONStorage(() => localStorage),
+        } catch (error) {
+            set({ isAuthenticated: false });
+            throw error;
         }
-    )
-);
+    },
+
+    /**
+     * Acción: Logout
+     * Limpia el estado y llama al backend para limpiar la cookie
+     */
+    logout: async () => {
+        try {
+            await adminLogout(); // Llama al backend para limpiar la cookie
+            set({ isAuthenticated: false });
+        } catch (error) {
+            // Aunque falle, limpiamos el estado local
+            set({ isAuthenticated: false });
+            console.error('Error al hacer logout:', error);
+        }
+    },
+
+    /**
+     * Acción: Setear el estado de autenticación manualmente
+     * Útil cuando verificamos la sesión con el backend
+     */
+    setAuthenticated: (value) => {
+        set({ isAuthenticated: value });
+    },
+}));

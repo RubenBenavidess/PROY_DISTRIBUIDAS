@@ -83,3 +83,17 @@
     display: block;
   }
 }
+
+.leave-button {
+  background-color: #5c1c1c; /* Rojo oscuro */
+  color: #f5c8c8;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.leave-button:hover {
+  background-color: #7a2d2d;
+}

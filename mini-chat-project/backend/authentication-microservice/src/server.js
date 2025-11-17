@@ -21,7 +21,7 @@ app.use(helmet());
 app.use(cookieParser());
 
 const CORS_OPTIONS = {
-    origin: '*',
+    origin: 'http://localhost:5173',
     optionsSuccessStatus: 200
 }
 app.use(cors(CORS_OPTIONS));

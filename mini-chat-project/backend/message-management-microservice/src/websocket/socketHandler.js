@@ -7,7 +7,8 @@ import {
     handleTyping,
     handleDisconnect,
     handleLeaveRoom,
-    handleHeartbeat
+    handleHeartbeat,
+    handleGetParticipants
 } from './handlers/index.js';
 
 const config = {
@@ -41,7 +42,9 @@ export function initializeWebSocket(httpServer) {
         },
         pingTimeout: config.websocket.pingTimeout,
         pingInterval: config.websocket.pingInterval,
-        maxHttpBufferSize: config.maxFileSize
+        maxHttpBufferSize: config.maxFileSize,
+
+        path: '/api/socket.io/'
     });
 
     setupHandlers();
@@ -66,6 +69,10 @@ function setupHandlers() {
 
         socket.on('join-room', async (data, callback) => {
             await handleJoinRoom(socket, data, callback);
+        });
+
+        socket.on('get-participants', (callback) => {
+            handleGetParticipants(socket, callback);
         });
 
         socket.on('send-message', async (data, callback) => {

@@ -41,9 +41,15 @@ const AdminDashboardPage = () => {
         }
     };
 
-    const handleLogout = () => {
-        logout();
-        navigate('/admin/login');
+    const handleLogout = async () => {
+        try {
+            await logout(); // Llama al backend para limpiar la cookie
+            navigate('/admin/login');
+        } catch (error) {
+            console.error('Error al cerrar sesión:', error);
+            // Aún así redirigir al login
+            navigate('/admin/login');
+        }
     };
 
     // --- Lógica del Modal de Crear Sala ---
@@ -91,14 +97,17 @@ const AdminDashboardPage = () => {
             <div className="room-list-container">
                 {isLoading && <p>Cargando salas...</p>}
                 {error && <p className="error-text">{error}</p>}
-                {!isLoading && rooms.map((room) => (
+                {!isLoading && rooms.length > 0 && rooms.map((room) => (
                 <RoomListItem
-                    key={room.id} // Asumo que tu API devuelve un 'id'
+                    key={room.roomId} // El backend devuelve 'roomId', no 'id'
                     room={room}
-                    isSelected={selectedRoom?.id === room.id}
-                    onClick={() => setSelectedRoom(room)} // ¡Aquí está la interactividad!
+                    isSelected={selectedRoom?.roomId === room.roomId}
+                    onClick={() => setSelectedRoom(room)}
                 />
                 ))}
+                {!isLoading && rooms.length === 0 && (
+                <p className="empty-message">No hay salas creadas aún.</p>
+                )}
             </div>
             </aside>
 
@@ -111,7 +120,7 @@ const AdminDashboardPage = () => {
                 <div className="stats-grid">
                     <div className="stat-card">
                     <span>PIN de Acceso</span>
-                    <strong>{selectedRoom.pin}</strong>
+                    <strong>{selectedRoom.pin || 'N/A'}</strong>
                     </div>
                     <div className="stat-card">
                     <span>Tipo de Sala</span>
@@ -122,8 +131,8 @@ const AdminDashboardPage = () => {
                     <strong>{selectedRoom.participants || 0}</strong>
                     </div>
                     <div className="stat-card">
-                    <span>ID de Sala (para usuarios)</span>
-                    <strong className="small-text">{selectedRoom.id}</strong>
+                    <span>ID de Sala</span>
+                    <strong className="small-text">{selectedRoom.roomId}</strong>
                     </div>
                 </div>
                 {/* Aquí puedes agregar más botones, como "Borrar Sala" */}
