@@ -29,7 +29,7 @@ export async function handleDisconnect(socket) {
         socket.to(roomId).emit('user-left', {
             hashedUsername: nickname,
             timestamp: Date.now(),
-            participants: roomService.getRoomParticipantCount(roomId)
+            participants: getRoomParticipantCount(roomId)
         });
 
         console.log(`[WS] Client disconnected: ${socket.id}, room: ${roomId}`);
