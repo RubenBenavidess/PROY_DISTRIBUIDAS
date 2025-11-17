@@ -89,10 +89,6 @@ function setupHandlers() {
             await handleLeaveRoom(socket, callback);
         });
 
-        socket.on('get-participants', (data, callback) => {
-            handleGetParticipants(socket, data, callback);
-        });
-
         socket.on('heartbeat', () => {
             handleHeartbeat(socket);
         });
