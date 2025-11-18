@@ -1,4 +1,4 @@
-import { login as loginService}  from "../services/authService.js";
+import { login as loginService, logout as logoutService }  from "../services/authService.js";
 import { adminLoginSchema } from "../security/zSchemes.js";
 import { validateToken } from "../security/jwtManager.js";
 
@@ -49,6 +49,20 @@ export async function verifySession(req, res, next){
 
 export async function logout(req, res, next){
     try{
+        // Get token from cookies to extract user info
+        const token = req.cookies.accessToken;
+        
+        if(token) {
+            try {
+                const decoded = validateToken(token);
+                // Send logout event to logs-microservice (non-blocking)
+                await logoutService(decoded.admin_id, decoded.username);
+            } catch(e) {
+                console.error('Error logging logout event:', e.message);
+                // Continue with logout even if log fails
+            }
+        }
+        
         // Clear the cookie
         res.clearCookie("accessToken", {
             httpOnly: true,

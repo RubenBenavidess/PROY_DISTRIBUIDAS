@@ -2,6 +2,7 @@ import Room from '../models/Room.js';
 import { v4 as uuidv4 } from "uuid";
 import { generateHash } from "../security/bcrypter.js"
 import { userNicknames as activeSessions } from "../websocket/socketHandler.js";
+import { sendLogToMicroservice } from './logsClient.js';
 
 /**
  * ------ LOGIC FUNCTIONS ------
@@ -123,6 +124,17 @@ export async function joinRoom(roomData, userData){
     // Log for audit
     console.log(`[AUDIT] User joined room: ${roomId}, nickname: ${nickname}, session: ${sessionId} at ${new Date().toISOString()}`);
 
+    // Log the room join event non-blocking
+    try {
+        await sendLogToMicroservice({
+            actorId: nickname,
+            eventType: 'ROOM_JOIN',
+            details: { roomId, sessionId }
+        });
+    } catch (err) {
+        console.error('Failed to log room join event:', err.message);
+    }
+
     return {
         success: true,
         roomId,
@@ -148,6 +160,17 @@ export async function leaveRoom(roomId, sessionId, nickname) {
     
     // Log for audit
     console.log(`[AUDIT] User left room: ${roomId}, nickname: ${nickname}, session: ${sessionId} at ${new Date().toISOString()}`);
+
+    // Log the room leave event non-blocking
+    try {
+        await sendLogToMicroservice({
+            actorId: nickname,
+            eventType: 'ROOM_LEAVE',
+            details: { roomId, sessionId }
+        });
+    } catch (err) {
+        console.error('Failed to log room leave event:', err.message);
+    }
 
     const remainingParticipants = getRoomParticipantCount(roomId);
 

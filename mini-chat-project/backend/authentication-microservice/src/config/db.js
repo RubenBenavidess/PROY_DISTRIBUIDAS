@@ -9,10 +9,15 @@ const MONGODB_URI = `mongodb+srv://${DB_USER}:${DB_PASS}@${DB_HOST}/${DB_NAME}?r
 
 export default async function connect() {
     try {
-        await mongoose.connect(MONGODB_URI); 
+        await mongoose.connect(MONGODB_URI, {
+          serverSelectionTimeoutMS: 30000,  // 30 segundos para conectar
+          socketTimeoutMS: 45000,            // 45 segundos para operaciones
+          connectTimeoutMS: 30000,           // 30 segundos para timeout inicial
+          retryWrites: true,
+          maxPoolSize: 10
+        }); 
         console.log("Conexión exitosa a MongoDB");
     } catch (error) {
         console.error("Error al conectar a MongoDB:", error);
     }
 }
- 

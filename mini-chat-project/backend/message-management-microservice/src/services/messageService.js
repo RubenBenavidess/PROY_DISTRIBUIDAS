@@ -3,6 +3,7 @@ import Room from '../models/Room.js';
 import { verifyMessageIntegrity, verifyFile, sanitizeFile, detectContentType, healthCheck } from './fileVerificationClient.js';
 import { putFromBuffer } from '../lib/s3put.js';
 import { getSignedImageUrl } from '../lib/s3get.js';
+import { sendLogToMicroservice } from './logsClient.js';
 
 /**
  * Check file verification service availability
@@ -42,6 +43,17 @@ export async function saveMessage(messageData) {
     });
 
     await message.save();
+
+    // Log the message event non-blocking
+    try {
+        await sendLogToMicroservice({
+            actorId: username,
+            eventType: 'MESSAGE_SENT',
+            details: { roomId, messageId: message._id.toString(), contentType: 'text' }
+        });
+    } catch (err) {
+        console.error('Failed to log message event:', err.message);
+    }
 
     return {
         messageId: message._id,
@@ -88,6 +100,17 @@ export async function saveMultimediaMessage(messageData) {
     });
 
     await message.save();
+
+    // Log the multimedia message event non-blocking
+    try {
+        await sendLogToMicroservice({
+            actorId: username,
+            eventType: 'MESSAGE_SENT',
+            details: { roomId, messageId: message._id.toString(), contentType, filename }
+        });
+    } catch (err) {
+        console.error('Failed to log multimedia message event:', err.message);
+    }
 
     // Generate signed URL for the uploaded file
     const signedUrl = await getSignedImageUrl(url);

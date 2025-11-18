@@ -3,6 +3,8 @@ dotenv.config();
 
 import connect from "./config/db.js";
 
+import hashCache from "./logs/hashCache.js";
+
 import express from "express";
 import router from "./routes/authRouter.js";
 import helmet from "helmet";

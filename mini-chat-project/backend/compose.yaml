@@ -39,6 +39,24 @@ services:
       exit 0;
       "
 
+  #--- Servicio de Logs ---
+  logs-microservice:
+    build:
+      context: ./logs-microservice
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    container_name: logs-microservice
+    env_file:
+      - ./.env
+    ports:
+      - "4001:4000" # Host:Container (4001 en host, 4000 en container)
+    networks:
+      - app-net
+    volumes:
+      # Montar las llaves para firmar (privada)
+      - ./authentication-microservice/src/keys/ec_private.pem:/app/keys/ec_private.pem:ro
+      - ./authentication-microservice/src/keys/ec_public.pem:/app/keys/ec_public.pem:ro
+
   #--- Servicio de Autenticación ---
   auth-api:
     build:
@@ -55,6 +73,12 @@ services:
       - "3000:${PORT}" # Host:Container
     networks:
       - app-net
+    depends_on:
+      - logs-microservice
+    volumes:
+      # Montar las llaves JWT
+      - ./authentication-microservice/src/keys/ec_private.pem:/app/keys/ec_private.pem:ro
+      - ./authentication-microservice/src/keys/ec_public.pem:/app/keys/ec_public.pem:ro
 
   #--- Servicio de Gestión de Mensajes ---
   message-management-microservice:
@@ -71,6 +95,7 @@ services:
       - app-net
     depends_on:
       - auth-api
+      - logs-microservice
       - minio
     volumes:
       # Montar las llaves JWT (la pública para verificar tokens)
@@ -95,7 +120,7 @@ services:
       # auth-api (y message-api) ya estén corriendo".
       - auth-api
       - message-management-microservice
-      # - image-api
+      - logs-microservice
 
 networks:
   app-net:
