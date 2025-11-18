@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useRoomStore } from '../store/roomStore';
 import { socketService } from '../services/socketService';
 import { cryptoService } from '../utils/cryptoService';
+import { fileValidationService } from '../services/fileValidationService';
+import { validateMessage } from '../utils/xssValidator';
 import { getRoomInfo } from '../api/roomApi';
 
 import { ChatBubble } from '../components/chat/ChatBubble';
@@ -61,19 +63,29 @@ const ChatRoomPage = () => {
             return;
         }
 
-        // 📋 Cargar el título real de la sala desde la API
+        // 🧵 Inicializar Web Worker para análisis de archivos
+        console.log('🧵 Inicializando Web Worker para análisis de archivos...');
+        fileValidationService.initializeWorker();
+
+        // Cargar el título real de la sala desde la API
         const loadRoomTitle = async () => {
             try {
                 const fullRoomInfo = await getRoomInfo(roomInfo.roomId);
                 setRoomTitle(fullRoomInfo.title || roomInfo.roomId);
-                console.log('✅ Título de sala cargado:', fullRoomInfo.title);
+                console.log('Título de sala cargado:', fullRoomInfo.title);
             } catch (err) {
-                console.error('❌ Error cargando título de sala:', err);
+                console.error('Error cargando título de sala:', err);
                 setRoomTitle(roomInfo.roomId); // Fallback al roomId
             }
         };
 
         loadRoomTitle();
+
+        // Cleanup: destruir worker al desmontar componente
+        return () => {
+            console.log('Limpiando Web Worker...');
+            fileValidationService.destroy();
+        };
     }, [roomInfo, sessionId, nickname, hashedNickname, navigate, clearRoom]);
 
     // --- EFECTO 1: Escuchar Sockets y Manejar Salida ---
@@ -82,7 +94,7 @@ const ChatRoomPage = () => {
 
         // --- Suscribirse a eventos del socket ---
         const handleNewMessage = async (msg) => {
-            console.log('📩 Nuevo mensaje recibido (encriptado):', msg);
+            console.log('Nuevo mensaje recibido (encriptado):', msg);
             
             try {
                 // 1️⃣ Verificar firma digital (si existe)
@@ -103,12 +115,12 @@ const ChatRoomPage = () => {
                         });
                         return;
                     }
-                    console.log('✅ Firma verificada correctamente');
+                    console.log('Firma verificada correctamente');
                 }
                 
                 // 2️⃣ Desencriptar el mensaje (E2EE)
                 const decryptedContent = await cryptoService.decryptMessage(msg.content);
-                console.log('🔓 Mensaje desencriptado:', decryptedContent);
+                console.log('Mensaje desencriptado:', decryptedContent);
                 
                 // 3️⃣ Agregar mensaje desencriptado al store
                 addMessage({
@@ -126,9 +138,56 @@ const ChatRoomPage = () => {
             }
         };
         
-        const handleNewFile = (fileMsg) => {
-            console.log('Nuevo archivo recibido:', fileMsg);
-            addMessage(fileMsg);
+        const handleNewFile = async (fileMsg) => {
+            console.log('Nuevo archivo recibido (encriptado):', fileMsg);
+            
+            try {
+                // 1️⃣ Verificar firma digital (si existe)
+                if (fileMsg.signature && fileMsg.publicKey) {
+                    const isValid = await cryptoService.verifySignature(
+                        fileMsg.content,
+                        fileMsg.signature,
+                        fileMsg.publicKey
+                    );
+                    
+                    if (!isValid) {
+                        console.warn('FIRMA INVÁLIDA - Archivo posiblemente alterado:', fileMsg);
+                        addMessage({
+                            ...fileMsg,
+                            content: null,
+                            isInvalid: true,
+                            filename: fileMsg.filename + ' [FIRMA INVÁLIDA]'
+                        });
+                        return;
+                    }
+                    console.log('Firma del archivo verificada correctamente');
+                }
+                
+                // 2️⃣ Desencriptar el archivo (E2EE)
+                console.log('Desencriptando archivo...');
+                const decryptedBuffer = await cryptoService.decryptFile(fileMsg.content);
+                
+                // 3️⃣ Crear un Blob URL temporal para el archivo descifrado
+                const blob = new Blob([decryptedBuffer], { type: fileMsg.contentType || 'application/octet-stream' });
+                const blobUrl = URL.createObjectURL(blob);
+                
+                console.log('Archivo desencriptado correctamente');
+                
+                // 4️⃣ Agregar mensaje con URL del blob descifrado
+                addMessage({
+                    ...fileMsg,
+                    content: blobUrl,
+                    isEncrypted: true // Marca para limpiar el blob URL después
+                });
+            } catch (err) {
+                console.error('Error procesando archivo:', err);
+                addMessage({
+                    ...fileMsg,
+                    content: null,
+                    isError: true,
+                    filename: fileMsg.filename + ' [Error al descifrar]'
+                });
+            }
         };
 
         // Manejar cuando un usuario se une
@@ -189,29 +248,118 @@ const ChatRoomPage = () => {
     // --- Funciones para mandar datos ---
     const handleSendMessage = async (text) => {
         try {
-            // PASO 1: Encriptar el mensaje con AES (E2EE)
+            // PASO 1: Validación XSS (ANTES DE ENCRIPTAR)
+            console.log('Validando contenido contra XSS...');
+            const validation = validateMessage(text, { 
+                autoSanitize: false,
+                maxLength: 10000 
+            });
+            
+            if (!validation.isValid) {
+                const errorMsg = 'MENSAJE BLOQUEADO\n\n' +
+                    'Se detectaron patrones peligrosos en el mensaje:\n' +
+                    validation.threats.map(t => `- ${t.type}: ${t.severity}`).join('\n');
+                
+                alert(errorMsg);
+                console.error('[XSS] Mensaje bloqueado:', validation);
+                throw new Error('Message blocked due to XSS patterns');
+            }
+            
+            console.log('[XSS] Mensaje validado correctamente');
+            
+            // PASO 2: Encriptar el mensaje con AES (E2EE)
             console.log('Encriptando mensaje...');
             const encryptedMessage = await cryptoService.encryptMessage(text);
             
-            // PASO 2: Firmar el mensaje encriptado con RSA
+            // PASO 3: Firmar el mensaje encriptado con RSA
             console.log('Firmando mensaje...');
             const signature = await cryptoService.signMessage(encryptedMessage);
             
-            // PASO 3: Obtener la clave pública para enviar
+            // PASO 4: Obtener la clave pública para enviar
             const publicKeyPem = cryptoService.getPublicKeyPEM();
             
-            // PASO 4: Enviar mensaje encriptado con firma y clave pública
+            // PASO 5: Enviar mensaje encriptado con firma y clave pública
             console.log('Enviando mensaje encriptado al servidor...');
             await socketService.sendMessage(encryptedMessage, signature, publicKeyPem);
             console.log('Mensaje enviado correctamente');
         } catch (err) {
             console.error("Error enviando mensaje:", err);
+            throw err;
         }
     };
 
     const handleSendFile = async (file) => {
         try {
-            await socketService.sendFile(file);
+            // PASO 1: ANÁLISIS DE SEGURIDAD (ANTES DE ENCRIPTAR) usando Web Worker
+            console.log('Iniciando análisis de seguridad en hilo separado...');
+            const analysisResult = await fileValidationService.analyzeFile(file);
+            
+            // Mostrar reporte en consola
+            const report = fileValidationService.generateReport(analysisResult);
+            console.log(report);
+            
+            // Verificar si el archivo debe ser bloqueado
+            const blockDecision = fileValidationService.shouldBlockFile(analysisResult);
+            
+            if (blockDecision.shouldBlock) {
+                // ARCHIVO BLOQUEADO POR AMENAZAS DE SEGURIDAD
+                const errorMsg = `ARCHIVO BLOQUEADO\n\n` +
+                    `Razón: ${blockDecision.reason}\n` +
+                    `Nivel de riesgo: ${blockDecision.riskLevel.toUpperCase()}\n\n` +
+                    `Amenazas detectadas:\n` +
+                    blockDecision.threats.map((t, i) => 
+                        `${i + 1}. [${t.severity}] ${t.message}`
+                    ).join('\n');
+                
+                alert(errorMsg);
+                console.error('[Seguridad] Archivo bloqueado:', blockDecision);
+                throw new Error(blockDecision.reason);
+            }
+            
+            if (blockDecision.shouldWarn) {
+                // ADVERTENCIA AL USUARIO (pero permite continuar)
+                const warnMsg = `ADVERTENCIA DE SEGURIDAD\n\n` +
+                    `${blockDecision.reason}\n` +
+                    `Nivel de riesgo: ${blockDecision.riskLevel.toUpperCase()}\n\n` +
+                    `¿Deseas continuar enviando este archivo?`;
+                
+                const userConfirmed = confirm(warnMsg);
+                if (!userConfirmed) {
+                    console.log('📋 Usuario canceló el envío del archivo');
+                    return;
+                }
+                console.warn('[Seguridad] Usuario confirmó envío a pesar de advertencias');
+            }
+            
+            // Archivo aprobado o usuario confirmó
+            console.log('[Seguridad] Archivo aprobado para envío');
+            console.log(`Análisis completado en ${analysisResult.processingTimeMs.toFixed(2)}ms`);
+            
+            // PASO 2: Leer el archivo como ArrayBuffer
+            console.log('Leyendo archivo...');
+            const fileBuffer = await file.arrayBuffer();
+            
+            // PASO 3: Encriptar el archivo con AES (E2EE)
+            console.log('Encriptando archivo...');
+            const encryptedFile = await cryptoService.encryptFile(fileBuffer);
+            
+            // PASO 4: Firmar el archivo encriptado con RSA
+            console.log('Firmando archivo...');
+            const signature = await cryptoService.signMessage(encryptedFile);
+            
+            // PASO 5: Obtener la clave pública para enviar
+            const publicKeyPem = cryptoService.getPublicKeyPEM();
+            
+            // PASO 6: Enviar archivo encriptado con firma y clave pública
+            console.log('Enviando archivo encriptado al servidor...');
+            await socketService.sendFile(
+                encryptedFile,
+                file.type,
+                file.name,
+                signature,
+                publicKeyPem
+            );
+            console.log('Archivo enviado correctamente');
         } catch (err) {
             console.error("Error enviando archivo:", err);
             // Re-lanzar el error para que MessageInput lo capture

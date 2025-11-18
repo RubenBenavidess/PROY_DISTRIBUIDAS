@@ -35,10 +35,10 @@ class CryptoService {
             );
             this.publicKeyPem = this.arrayBufferToBase64(publicKeyBuffer);
 
-            console.log('🔐 [Crypto] Par de claves RSA generado');
+            console.log('[Crypto] Par de claves RSA generado');
             return this.publicKeyPem;
         } catch (error) {
-            console.error('❌ [Crypto] Error generando claves RSA:', error);
+            console.error('[Crypto] Error generando claves RSA:', error);
             throw error;
         }
     }
@@ -46,7 +46,7 @@ class CryptoService {
     /**
      * Deriva una clave AES-GCM desde roomId y PIN
      * Esta es la clave compartida de la sala (todos la calculan igual)
-     * ⚠️ IMPORTANTE: El servidor NUNCA tiene acceso a esta clave
+     * IMPORTANTE: El servidor NUNCA tiene acceso a esta clave
      */
     async deriveAESKey(roomId, pin) {
         try {
@@ -67,10 +67,10 @@ class CryptoService {
                 ['encrypt', 'decrypt']
             );
 
-            console.log('🔑 [Crypto] Clave AES derivada de la sala (E2EE)');
+            console.log('[Crypto] Clave AES derivada de la sala (E2EE)');
             return this.aesKey;
         } catch (error) {
-            console.error('❌ [Crypto] Error derivando clave AES:', error);
+            console.error('[Crypto] Error derivando clave AES:', error);
             throw error;
         }
     }
@@ -105,10 +105,10 @@ class CryptoService {
             combined.set(new Uint8Array(ciphertext), iv.length);
 
             const encrypted = this.arrayBufferToBase64(combined.buffer);
-            console.log('🔒 [Crypto] Mensaje encriptado');
-            return encrypted;
+            console.log('[Crypto] Mensaje encriptado');
+            return encryptedMessage;
         } catch (error) {
-            console.error('❌ [Crypto] Error encriptando mensaje:', error);
+            console.error('[Crypto] Error encriptando mensaje:', error);
             throw error;
         }
     }
@@ -143,11 +143,82 @@ class CryptoService {
 
             const decoder = new TextDecoder();
             const message = decoder.decode(decrypted);
-            console.log('🔓 [Crypto] Mensaje desencriptado');
+            console.log('[Crypto] Mensaje desencriptado');
             return message;
         } catch (error) {
-            console.error('❌ [Crypto] Error desencriptando mensaje:', error);
-            return '[❌ Error: No se pudo desencriptar el mensaje]';
+            console.error('[Crypto] Error desencriptando mensaje:', error);
+            return '[Error: No se pudo desencriptar el mensaje]';
+        }
+    }
+
+    /**
+     * Encripta un archivo (ArrayBuffer) con AES-GCM
+     * @param {ArrayBuffer} fileBuffer - Buffer del archivo
+     * @returns {string} Archivo encriptado en Base64 (formato: iv:ciphertext)
+     */
+    async encryptFile(fileBuffer) {
+        if (!this.aesKey) {
+            throw new Error('Clave AES no inicializada. Llama a deriveAESKey primero.');
+        }
+
+        try {
+            // Generar IV aleatorio (12 bytes recomendados para GCM)
+            const iv = window.crypto.getRandomValues(new Uint8Array(12));
+
+            // Encriptar el buffer del archivo
+            const ciphertext = await window.crypto.subtle.encrypt(
+                { name: 'AES-GCM', iv },
+                this.aesKey,
+                fileBuffer
+            );
+
+            // Combinar IV + ciphertext y convertir a Base64
+            const combined = new Uint8Array(iv.length + ciphertext.byteLength);
+            combined.set(iv, 0);
+            combined.set(new Uint8Array(ciphertext), iv.length);
+
+            const encrypted = this.arrayBufferToBase64(combined.buffer);
+            console.log('[Crypto] Archivo encriptado');
+            return encrypted;
+        } catch (error) {
+            console.error('[Crypto] Error encriptando archivo:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Desencripta un archivo con AES-GCM
+     * @param {string} encryptedFile - Archivo encriptado en Base64 (iv:ciphertext)
+     * @returns {ArrayBuffer} Buffer del archivo desencriptado
+     */
+    async decryptFile(encryptedFile) {
+        if (!this.aesKey) {
+            throw new Error('Clave AES no inicializada. Llama a deriveAESKey primero.');
+        }
+
+        try {
+            // Convertir de Base64 a ArrayBuffer
+            const combined = this.base64ToArrayBuffer(encryptedFile);
+            const combinedArray = new Uint8Array(combined);
+
+            // Extraer IV (primeros 12 bytes)
+            const iv = combinedArray.slice(0, 12);
+
+            // Extraer ciphertext (resto)
+            const ciphertext = combinedArray.slice(12);
+
+            // Desencriptar
+            const decrypted = await window.crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv },
+                this.aesKey,
+                ciphertext
+            );
+
+            console.log('[Crypto] Archivo desencriptado');
+            return decrypted;
+        } catch (error) {
+            console.error('[Crypto] Error desencriptando archivo:', error);
+            throw new Error('No se pudo desencriptar el archivo');
         }
     }
 
@@ -172,10 +243,10 @@ class CryptoService {
             );
 
             const signatureBase64 = this.arrayBufferToBase64(signature);
-            console.log('✍️ [Crypto] Mensaje firmado');
+            console.log('[Crypto] Mensaje firmado');
             return signatureBase64;
         } catch (error) {
-            console.error('❌ [Crypto] Error firmando mensaje:', error);
+            console.error('[Crypto] Error firmando mensaje:', error);
             throw error;
         }
     }
@@ -215,14 +286,14 @@ class CryptoService {
             );
 
             if (isValid) {
-                console.log('✅ [Crypto] Firma verificada correctamente');
+                console.log('[Crypto] Firma verificada correctamente');
             } else {
-                console.warn('⚠️ [Crypto] Firma inválida');
+                console.warn('[Crypto] Firma inválida');
             }
 
             return isValid;
         } catch (error) {
-            console.error('❌ [Crypto] Error verificando firma:', error);
+            console.error('[Crypto] Error verificando firma:', error);
             return false;
         }
     }
@@ -234,7 +305,7 @@ class CryptoService {
         this.rsaKeyPair = null;
         this.aesKey = null;
         this.publicKeyPem = null;
-        console.log('🧹 [Crypto] Claves limpiadas');
+        console.log('[Crypto] Claves limpiadas');
     }
 
     /**

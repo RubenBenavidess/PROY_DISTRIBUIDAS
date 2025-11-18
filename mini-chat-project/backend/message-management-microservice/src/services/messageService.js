@@ -1,45 +1,29 @@
 import Message from '../models/Message.js';
 import Room from '../models/Room.js';
-import { verifyMessageIntegrity, verifyFile, sanitizeFile, detectContentType, healthCheck } from './fileVerificationClient.js';
-import { putFromBuffer } from '../lib/s3put.js';
-import { getSignedImageUrl } from '../lib/s3get.js';
-import { sendLogToMicroservice } from './logsClient.js';
 
 /**
- * Check file verification service availability
- */
-export async function checkFileVerificationService() {
-    const isAvailable = await healthCheck();
-    if (isAvailable) {
-        console.log('File verification service is available');
-    } else {
-        console.warn('File verification service is not available. File uploads will be disabled.');
-    }
-}
-
-/**
- * Save message to database
- * @param {Object} messageData - Message data {roomId, username, userIP, content}
+ * Save message to database (E2EE)
+ * Content is already encrypted on client side - server just stores it
+ * @param {Object} messageData - Message data {roomId, username, userIP, content, signature, publicKey}
  * @returns {Object} - Saved message info {messageId, timestamp}
  */
 export async function saveMessage(messageData) {
-    const { roomId, username, userIP, content } = messageData;
+    const { roomId, username, userIP, content, signature, publicKey } = messageData;
 
     const room = await Room.findOne({ roomId });
     if (!room) {
         throw new Error('Room not found');
     }
 
-    if (!(await verifyMessageIntegrity(content)).isValid) {
-        throw new Error('Message failed integrity verification');
-    }
-
+    // Content is already encrypted (E2EE) - no validation needed server-side
     const message = new Message({
         roomId,
         username,
         userIP,
         contentType: 'text',
-        content: content
+        content: content, // Encrypted Base64 string
+        signature,        // RSA signature for verification
+        publicKey         // Public key for signature verification
     });
 
     await message.save();
@@ -62,73 +46,60 @@ export async function saveMessage(messageData) {
 }
 
 /**
- * Save multimedia message to database
- * @param {Object} messageData - Message data {roomId, username, userIP, content(fileBuffer), filename}
- * @returns {Object} - Saved message info {messageId, timestamp}
+ * Save multimedia message to database (LEGACY - deprecated in favor of E2EE)
+ * This function is kept for backward compatibility but should not be used
+ * All new files should use saveEncryptedFileMessage instead
  */
 export async function saveMultimediaMessage(messageData) {
-    const { roomId, username, userIP, content, filename } = messageData;
+    throw new Error('DEPRECATED: Use saveEncryptedFileMessage for E2EE file uploads');
+}
+
+/**
+ * Save encrypted file message to database (E2EE)
+ * The server NEVER decrypts the file - it stores and relays encrypted content
+ * @param {Object} messageData - Message data {roomId, username, userIP, encryptedContent, mimeType, filename, signature, publicKey}
+ * @returns {Object} - Saved message info {messageId, timestamp}
+ */
+export async function saveEncryptedFileMessage(messageData) {
+    const { roomId, username, userIP, encryptedContent, mimeType, filename, signature, publicKey } = messageData;
 
     const room = await Room.findOne({ roomId });
     if (!room) {
         throw new Error('Room not found');
     }
 
-    if(room.type === 'text'){
+    if (room.type === 'text') {
         throw new Error('Invalid content type for text room');
     }
 
-    const contentType = await detectContentType(content);
-
-    if(!(await verifyFile(content, contentType, filename)).isSafe){
-        throw new Error('File failed security verification');
-    }
-
-    const sanitizedBuffer = await sanitizeFile(content, contentType, filename);
-
-    const url = `messages/${roomId}/${Date.now()}_${filename}`;
-
-    await putFromBuffer(sanitizedBuffer, url);
-
+    // Store encrypted file content directly in the database
+    // The server CANNOT and DOES NOT decrypt this content
     const message = new Message({
         roomId,
         username,
         userIP,
-        contentType,
-        content: url,
-        filename
+        contentType: mimeType || 'application/octet-stream',
+        content: encryptedContent, // Store encrypted Base64 string
+        filename,
+        signature, // Store signature for verification
+        publicKey  // Store public key for verification
     });
 
     await message.save();
 
-    // Log the multimedia message event non-blocking
-    try {
-        await sendLogToMicroservice({
-            actorId: username,
-            eventType: 'MESSAGE_SENT',
-            details: { roomId, messageId: message._id.toString(), contentType, filename }
-        });
-    } catch (err) {
-        console.error('Failed to log multimedia message event:', err.message);
-    }
-
-    // Generate signed URL for the uploaded file
-    const signedUrl = await getSignedImageUrl(url);
+    console.log(`[E2EE] Encrypted file stored: messageId=${message._id}, filename=${filename}`);
 
     return {
         messageId: message._id,
-        timestamp: message.createdAt,
-        contentType,
-        signedUrl
+        timestamp: message.createdAt
     };
-        
 }
 
 /**
  * Get latest messages for a room with pagination
  * @param {String} roomId - Room ID
  * @param {Object} options - Pagination options {limit, skip}
- * @returns {Array} - List of messages with signed URLs for multimedia content
+ * @returns {Array} - List of messages (encrypted files returned as-is for E2EE)
  */
 export async function getLatestMessages(roomId, options = {}) {
     try {
@@ -143,28 +114,24 @@ export async function getLatestMessages(roomId, options = {}) {
             .skip(skip)
             .lean();
 
-        // Generate signed URLs for non-text messages
-        const messagesWithSignedUrls = await Promise.all(
-            messages.map(async (message) => {
-                // If contentType is not 'text', generate a signed URL
-                if (message.contentType !== 'text') {
-                    try {
-                        const signedUrl = await getSignedImageUrl(message.content);
-                        return {
-                            ...message,
-                            content: signedUrl
-                        };
-                    } catch (error) {
-                        console.error(`Error generating signed URL for message ${message._id}:`, error);
-                        // Return message with original content if URL generation fails
-                        return message;
-                    }
-                }
-                return message;
-            })
-        );
+        // For E2EE files, return encrypted content as-is
+        // Clients will decrypt locally with their AES key
+        const processedMessages = messages.map((message) => {
+            // If message has signature and publicKey, it's an E2EE file
+            if (message.signature && message.publicKey) {
+                // Return encrypted content directly (no URL generation)
+                return {
+                    ...message,
+                    // content already contains encrypted Base64 string
+                };
+            }
+            
+            // For legacy non-encrypted files or text messages
+            // (kept for backward compatibility if needed)
+            return message;
+        });
 
-        return messagesWithSignedUrls;
+        return processedMessages;
     } catch (error) {
         console.error('Error retrieving messages:', error);
         throw error;

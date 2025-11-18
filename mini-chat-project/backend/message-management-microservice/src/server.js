@@ -38,7 +38,7 @@ app.use(cors({
 // Rate limiting
 const limiter = rateLimit({
     windowMs: config.rateLimit.windowMs,
-    max: config.rateLimit.maxRequests,
+    limit: config.rateLimit.maxRequests,
     message: 'Too many requests from this IP, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,

@@ -140,21 +140,26 @@ class SocketService {
     }
 
     /**
-     * Envía un archivo.
-     * @param {File} file - El objeto File del input
+     * Envía un archivo cifrado con firma digital.
+     * @param {string} encryptedFileBase64 - Archivo encriptado en Base64
+     * @param {string} mimeType - Tipo MIME del archivo original
+     * @param {string} filename - Nombre del archivo original
+     * @param {string} signature - Firma digital del archivo encriptado
+     * @param {string} publicKey - Clave pública RSA en formato Base64
      */
-    async sendFile(file) {
-        // Tu backend espera un buffer, así que lo convertimos
-        const fileBuffer = await file.arrayBuffer();
-
+    async sendFile(encryptedFileBase64, mimeType, filename, signature = null, publicKey = null) {
         const data = {
-        fileBuffer,
-        mimeType: file.type,
-        filename: file.name,
+            encryptedFile: encryptedFileBase64,
+            mimeType,
+            filename,
         };
 
+        // Agregar firma y clave pública si están disponibles
+        if (signature) data.signature = signature;
+        if (publicKey) data.publicKey = publicKey;
+
         return this.request('send-file', data);
-        // Devuelve: { success: true, hash, timestamp }
+        // Devuelve: { success: true, messageId, timestamp }
     }
 
     /**

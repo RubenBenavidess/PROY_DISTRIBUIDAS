@@ -94,6 +94,23 @@ El proyecto implementa una arquitectura de microservicios con los siguientes com
   - Cookies HttpOnly para prevenir XSS
   - Validación de PIN para acceso a salas
   - Sanitización de inputs
+  - Encriptación E2E con algoritmo: AES-GCM-256
+  - Derivación de la clave con la sala: SHA-256(`roomId:pin`)
+    - **Compartida**: Todos los usuarios de la sala calculan la misma clave
+    - **Nunca enviada**: Se calcula localmente en cada cliente
+
+- **🛡️ Análisis de Archivos con Web Workers (NUEVO)**
+  - **Detección de esteganografía LSB** en imágenes
+  - **Análisis de entropía de Shannon** para detectar patrones anómalos
+  - **Verificación de MIME types** (magic bytes) contra archivos disfrazados
+  - **Análisis de metadatos** (EXIF, PNG chunks) para detectar ocultamiento de datos
+  - **Procesamiento con hilos** (Web Workers) sin bloquear UI
+  - **Compatible con E2EE**: Análisis ANTES de encriptar
+  - **Niveles de riesgo**: CRITICAL, HIGH, MEDIUM, LOW
+  - **Bloqueo automático** de amenazas críticas/altas
+  - **Reportes detallados** de análisis con tiempos de procesamiento
+  - Ver documentación completa: [`ANALISIS_ARCHIVOS_WEB_WORKERS.md`](./ANALISIS_ARCHIVOS_WEB_WORKERS.md)
+
 
 ### Panel de Administración
 

@@ -1,5 +1,5 @@
 import { getRoomInfo } from '../../services/roomService.js';
-import { saveMultimediaMessage } from '../../services/messageService.js';
+import { saveEncryptedFileMessage } from '../../services/messageService.js';
 import { userNicknames } from '../socketHandler.js';
 
 /**
@@ -8,10 +8,10 @@ import { userNicknames } from '../socketHandler.js';
  * @returns {Object} Validation result {valid: boolean, error?: string}
  */
 function validateFileData(data) {
-    const { fileBuffer, filename } = data;
+    const { encryptedFile, filename } = data;
 
-    if (!fileBuffer || !Buffer.isBuffer(fileBuffer)) {
-        return { valid: false, error: 'Invalid file buffer' };
+    if (!encryptedFile || typeof encryptedFile !== 'string') {
+        return { valid: false, error: 'Invalid encrypted file data' };
     }
 
     if (!filename || typeof filename !== 'string') {
@@ -38,16 +38,18 @@ function validateRoomSupportsMedia(room) {
 }
 
 /**
- * Validate file size
- * @param {Buffer} fileBuffer - File buffer
+ * Validate file size (encrypted file in Base64)
+ * @param {string} encryptedFileBase64 - Encrypted file in Base64
  * @param {number} maxSizeMB - Maximum size in MB
  * @returns {Object} Validation result {valid: boolean, error?: string}
  */
-function validateFileSize(fileBuffer, maxSizeMB) {
-    const fileSizeInBytes = fileBuffer.length;
+function validateFileSize(encryptedFileBase64, maxSizeMB) {
+    // Estimate original size from Base64 (Base64 is ~33% larger)
+    const base64Length = encryptedFileBase64.length;
+    const estimatedBytes = (base64Length * 3) / 4;
     const maxSizeInBytes = maxSizeMB * 1024 * 1024;
 
-    if (fileSizeInBytes > maxSizeInBytes) {
+    if (estimatedBytes > maxSizeInBytes) {
         return { 
             valid: false, 
             error: `File too large. Maximum size is ${maxSizeMB}MB` 
@@ -62,18 +64,22 @@ function validateFileSize(fileBuffer, maxSizeMB) {
  * @param {string} messageId - Message ID
  * @param {string} hashedNickname - Hashed nickname
  * @param {string} filename - Original filename
- * @param {string} contentType - Content type detected
- * @param {string} content - Signed URL for the file
+ * @param {string} mimeType - MIME type of the original file
+ * @param {string} encryptedContent - Encrypted file content (Base64)
+ * @param {string} signature - Digital signature (Base64)
+ * @param {string} publicKey - Public RSA key (Base64)
  * @param {Date} timestamp - Message timestamp
  * @returns {Object} File data object
  */
-function buildFileData(messageId, hashedNickname, filename, contentType, content, timestamp) {
+function buildFileData(messageId, hashedNickname, filename, mimeType, encryptedContent, signature, publicKey, timestamp) {
     return {
         id: messageId,
         username: hashedNickname,
         filename,
-        contentType,
-        content,
+        contentType: mimeType,
+        content: encryptedContent,
+        signature,
+        publicKey,
         timestamp
     };
 }
@@ -89,9 +95,9 @@ function broadcastFile(io, roomId, fileData) {
 }
 
 /**
- * Handle file upload
+ * Handle encrypted file upload with E2EE
  * @param {Object} socket - Socket.io socket
- * @param {Object} data - Data from client {fileBuffer, mimeType, filename}
+ * @param {Object} data - Data from client {encryptedFile, mimeType, filename, signature, publicKey}
  * @param {Function} callback - Callback to send response
  * @param {Object} io - Socket.IO server instance
  */
@@ -107,7 +113,7 @@ export async function handleSendFile(socket, data, callback, io) {
             });
         }
 
-        const { fileBuffer, filename } = data;
+        const { encryptedFile, mimeType, filename, signature, publicKey } = data;
         const { roomId, nickname } = userInfo;
 
         // Validate file data
@@ -131,8 +137,8 @@ export async function handleSendFile(socket, data, callback, io) {
             });
         }
 
-        // Validate file size
-        const sizeValidation = validateFileSize(fileBuffer, room.contentSizeLimit);
+        // Validate encrypted file size
+        const sizeValidation = validateFileSize(encryptedFile, room.contentSizeLimit);
         if (!sizeValidation.valid) {
             return callback({
                 success: false,
@@ -143,30 +149,36 @@ export async function handleSendFile(socket, data, callback, io) {
         // Get user IP
         const userIP = socket.handshake.address;
 
-        // Save multimedia message (includes security verification - will throw error if unsafe)
-        const result = await saveMultimediaMessage({ 
+        // Save encrypted file message (E2EE - server never decrypts)
+        // Store encrypted content directly without decryption
+        const result = await saveEncryptedFileMessage({ 
             roomId, 
             username: nickname, 
             userIP, 
-            content: fileBuffer, 
-            filename 
+            encryptedContent: encryptedFile,
+            mimeType,
+            filename,
+            signature,
+            publicKey
         });
 
-        // Build file data
+        // Build file data for broadcasting (encrypted)
         const fileData = buildFileData(
             result.messageId,
             nickname,
             filename,
-            result.contentType,
-            result.signedUrl,
+            mimeType,
+            encryptedFile,
+            signature,
+            publicKey,
             result.timestamp
         );
 
-        // Broadcast to all users in room
+        // Broadcast encrypted file to all users in room
         broadcastFile(io, roomId, fileData);
 
-        // Audit log
-        console.log(`[AUDIT] File sent: room=${roomId}, user=${nickname}, messageId=${result.messageId}`);
+        // Audit log (server cannot read encrypted content)
+        console.log(`[AUDIT] Encrypted file sent: room=${roomId}, user=${nickname}, file=${filename}, messageId=${result.messageId}, signed=${!!signature}`);
 
         callback({
             success: true,
@@ -175,7 +187,7 @@ export async function handleSendFile(socket, data, callback, io) {
         });
 
     } catch (error) {
-        console.error('[WS] Error sending file:', error);
+        console.error('[WS] Error sending encrypted file:', error);
         callback({
             success: false,
             error: error.message

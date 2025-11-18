@@ -104,7 +104,9 @@ export async function handleSendMessage(socket, data, callback, io) {
             roomId,
             username: nickname,
             userIP,
-            content // Contenido encriptado
+            content,    // Contenido encriptado
+            signature,  // Firma digital RSA
+            publicKey   // Clave pública para verificación
         });
         console.log('[DEBUG] Mensaje guardado con ID:', result.messageId);
 
@@ -122,7 +124,7 @@ export async function handleSendMessage(socket, data, callback, io) {
         broadcastMessage(io, roomId, messageData);
 
         // Audit log
-        console.log(`[AUDIT] 🔒 Encrypted message sent: room=${roomId}, hashedNickname=${nickname}, messageId=${result.messageId}, signed=${!!signature}`);
+        console.log(`[AUDIT] Encrypted message sent: room=${roomId}, hashedNickname=${nickname}, messageId=${result.messageId}, signed=${!!signature}`);
 
         callback({
             success: true,

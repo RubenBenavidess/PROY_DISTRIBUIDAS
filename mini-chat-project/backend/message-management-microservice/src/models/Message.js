@@ -25,6 +25,14 @@ const messageSchema = new mongoose.Schema({
     filename: {
         type: String,
         required: false
+    },
+    signature: {
+        type: String,
+        required: false
+    },
+    publicKey: {
+        type: String,
+        required: false
     }
 }, {
     timestamps: true
