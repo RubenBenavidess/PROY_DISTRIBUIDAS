@@ -11,24 +11,6 @@ const apiClient = axios.create({
   withCredentials: true, // Esto es crucial para enviar cookies al backend
 });
 
-/*
- * INTERCEPTOR (DESHABILITADO - usamos cookies httpOnly):
- * Las cookies se envían automáticamente gracias a withCredentials: true
- * No necesitamos inyectar el token manualmente en las cabeceras
- */
-// apiClient.interceptors.request.use(
-//   (config) => {
-//     const token = useAuthStore.getState().token;
-//     if (token) {
-//       config.headers.Authorization = `Bearer ${token}`;
-//     }
-//     return config;
-//   },
-//   (error) => {
-//     return Promise.reject(error);
-//   }
-// );
-
 // --- Servicios de Autenticación (authRouter.js) ---
 
 /**
@@ -113,6 +95,7 @@ export const getAllRooms = async () => {
 export const getRoomInfo = async (roomId) => {
   try {
     const { data } = await apiClient.get(`/api/rooms/${roomId}`);
+    console.log('Info de la sala obtenida:', data);
     return data; // Devuelve { room: {...} }
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error obteniendo info de la sala');

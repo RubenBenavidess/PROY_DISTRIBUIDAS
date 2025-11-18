@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRoomStore } from '../store/roomStore';
 import { socketService } from '../services/socketService';
+import { cryptoService } from '../utils/cryptoService';
+import { getRoomInfo } from '../api/roomApi';
 
 import { ChatBubble } from '../components/chat/ChatBubble';
 import { MessageInput } from '../components/chat/MessageInput';
@@ -11,6 +13,7 @@ const ChatRoomPage = () => {
     const navigate = useNavigate();
     const chatBodyRef = useRef(null); // Ref para hacer scroll automático
     const [disconnectMessage, setDisconnectMessage] = useState(null);
+    const [roomTitle, setRoomTitle] = useState('Cargando...'); // Estado para el título de la sala
 
     // Saca toda la data del "cerebro" (roomStore)
     const roomInfo = useRoomStore((state) => state.roomInfo);
@@ -39,22 +42,88 @@ const ChatRoomPage = () => {
         }
     }, [setParticipants]);
 
-    // --- VERIFICAR SI TENEMOS DATOS VÁLIDOS ---
+    // --- VERIFICAR SI TENEMOS DATOS VÁLIDOS Y CLAVES CRIPTOGRÁFICAS ---
     useEffect(() => {
+        // Verificar datos de la sala
         if (!roomInfo || !sessionId || !nickname || !hashedNickname) {
             console.warn('No room data found, redirecting to join page');
             navigate('/join', { replace: true });
+            return;
         }
-    }, [roomInfo, sessionId, nickname, hashedNickname, navigate]);
+        
+        // Verificar que las claves de encriptación estén disponibles
+        if (!cryptoService.aesKey || !cryptoService.rsaKeyPair) {
+            console.warn('⚠️ Claves de encriptación perdidas (recarga detectada)');
+            console.warn('Por seguridad E2EE, debes volver a unirte a la sala');
+            alert('⚠️ Las claves de encriptación se perdieron.\n\nPor seguridad, debes volver a unirte a la sala con el PIN correcto.');
+            clearRoom();
+            navigate('/join', { replace: true });
+            return;
+        }
+
+        // 📋 Cargar el título real de la sala desde la API
+        const loadRoomTitle = async () => {
+            try {
+                const fullRoomInfo = await getRoomInfo(roomInfo.roomId);
+                setRoomTitle(fullRoomInfo.title || roomInfo.roomId);
+                console.log('✅ Título de sala cargado:', fullRoomInfo.title);
+            } catch (err) {
+                console.error('❌ Error cargando título de sala:', err);
+                setRoomTitle(roomInfo.roomId); // Fallback al roomId
+            }
+        };
+
+        loadRoomTitle();
+    }, [roomInfo, sessionId, nickname, hashedNickname, navigate, clearRoom]);
 
     // --- EFECTO 1: Escuchar Sockets y Manejar Salida ---
     useEffect(() => {
         if (!roomInfo || !sessionId) return; // No hacer nada si no hay datos
 
         // --- Suscribirse a eventos del socket ---
-        const handleNewMessage = (msg) => {
-            console.log('Nuevo mensaje recibido:', msg);
-            addMessage(msg);
+        const handleNewMessage = async (msg) => {
+            console.log('📩 Nuevo mensaje recibido (encriptado):', msg);
+            
+            try {
+                // 1️⃣ Verificar firma digital (si existe)
+                if (msg.signature && msg.publicKey) {
+                    const isValid = await cryptoService.verifySignature(
+                        msg.content,
+                        msg.signature,
+                        msg.publicKey
+                    );
+                    
+                    if (!isValid) {
+                        console.warn('FIRMA INVÁLIDA - Mensaje posiblemente alterado:', msg);
+                        // Agregar advertencia visual al mensaje
+                        addMessage({
+                            ...msg,
+                            content: '[FIRMA INVÁLIDA - No confiar en este mensaje]',
+                            isInvalid: true
+                        });
+                        return;
+                    }
+                    console.log('✅ Firma verificada correctamente');
+                }
+                
+                // 2️⃣ Desencriptar el mensaje (E2EE)
+                const decryptedContent = await cryptoService.decryptMessage(msg.content);
+                console.log('🔓 Mensaje desencriptado:', decryptedContent);
+                
+                // 3️⃣ Agregar mensaje desencriptado al store
+                addMessage({
+                    ...msg,
+                    content: decryptedContent
+                });
+            } catch (err) {
+                console.error('Error procesando mensaje:', err);
+                // Si falla la desencriptación, mostrar error
+                addMessage({
+                    ...msg,
+                    content: '[Error: No se pudo desencriptar el mensaje]',
+                    isError: true
+                });
+            }
         };
         
         const handleNewFile = (fileMsg) => {
@@ -118,9 +187,26 @@ const ChatRoomPage = () => {
     }, [messages]); // Se ejecuta cada vez que llega un mensaje
 
     // --- Funciones para mandar datos ---
-    const handleSendMessage = (text) => {
-        socketService.sendMessage(text)
-            .catch(err => console.error("Error enviando mensaje:", err));
+    const handleSendMessage = async (text) => {
+        try {
+            // PASO 1: Encriptar el mensaje con AES (E2EE)
+            console.log('Encriptando mensaje...');
+            const encryptedMessage = await cryptoService.encryptMessage(text);
+            
+            // PASO 2: Firmar el mensaje encriptado con RSA
+            console.log('Firmando mensaje...');
+            const signature = await cryptoService.signMessage(encryptedMessage);
+            
+            // PASO 3: Obtener la clave pública para enviar
+            const publicKeyPem = cryptoService.getPublicKeyPEM();
+            
+            // PASO 4: Enviar mensaje encriptado con firma y clave pública
+            console.log('Enviando mensaje encriptado al servidor...');
+            await socketService.sendMessage(encryptedMessage, signature, publicKeyPem);
+            console.log('Mensaje enviado correctamente');
+        } catch (err) {
+            console.error("Error enviando mensaje:", err);
+        }
     };
 
     const handleSendFile = async (file) => {
@@ -135,15 +221,11 @@ const ChatRoomPage = () => {
 
     // --- Función para salir de la sala ---
     const handleLeaveRoom = async () => {
-        try {
-            await socketService.leaveRoom();
-        } catch (err) {
-            console.error('Error leaving room:', err);
-        } finally {
-            clearRoom();
-            socketService.disconnect();
-            navigate('/join', { replace: true });
-        }
+        // Salir inmediatamente sin esperar respuesta del servidor
+        cryptoService.clearKeys();
+        clearRoom();
+        socketService.disconnect();
+        navigate('/join', { replace: true });
     };
 
     // Si no hay info (aún cargando o error), no muestra nada
@@ -176,8 +258,8 @@ const ChatRoomPage = () => {
             {/* Header (Tu Spec) */}
             <header className="chat-header">
                 <div className="header-info">
-                    <h2>{roomInfo.title}</h2>
-                    <span><span className="lock-icon">🔒</span> Cifrado</span>
+                    <h2>{roomTitle}</h2>
+                    <span><span className="lock-icon">🔒</span> Cifrado E2EE</span>
                 </div>
                 <button onClick={handleLeaveRoom} className="leave-button">
                     Salir

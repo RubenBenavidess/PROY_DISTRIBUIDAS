@@ -152,10 +152,10 @@ function setupHandlers() {
         console.log(`[WS] Client connected: ${socket.id}`);
         
         // Enforce single connection per IP 
-        if (!enforceIPLimit(socket)) {
-            socket.disconnect(true);
-            return;
-        }
+        // if (!enforceIPLimit(socket)) {
+        //     socket.disconnect(true);
+        //     return;
+        // }
 
         socket.on('join-room', async (data, callback) => {
             await handleJoinRoom(socket, data, callback);

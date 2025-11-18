@@ -24,16 +24,24 @@ function validateMessageContent(content) {
  * @param {string} hashedNickname - Hashed nickname
  * @param {string} content - Message content (encrypted from client)
  * @param {Date} timestamp - Message timestamp
+ * @param {string} signature - Digital signature (optional)
+ * @param {string} publicKey - Public RSA key (optional)
  * @returns {Object} Message data object
  */
-function buildMessageData(messageId, hashedNickname, content, timestamp) {
-    return {
+function buildMessageData(messageId, hashedNickname, content, timestamp, signature = null, publicKey = null) {
+    const messageData = {
         id: messageId,
         username: hashedNickname,
-        content,
+        content, // Contenido encriptado (E2EE - servidor nunca lo desencripta)
         contentType: 'text',
         timestamp
     };
+
+    // Agregar firma y clave pública si están presentes (para verificación E2EE)
+    if (signature) messageData.signature = signature;
+    if (publicKey) messageData.publicKey = publicKey;
+
+    return messageData;
 }
 
 /**
@@ -49,7 +57,7 @@ function broadcastMessage(io, roomId, messageData) {
 /**
  * Handle message send
  * @param {Object} socket - Socket.io socket
- * @param {Object} data - Data from client {content}
+ * @param {Object} data - Data from client {content, signature?, publicKey?}
  * @param {Function} callback - Callback to send response
  * @param {Object} io - Socket.IO server instance
  */
@@ -65,10 +73,19 @@ export async function handleSendMessage(socket, data, callback, io) {
             });
         }
 
-        const { content } = data;
+        const { content, signature, publicKey } = data;
         const { roomId, nickname } = userInfo;
 
-        // Validate message content
+        // 🐛 DEBUG: Log datos recibidos
+        console.log('[DEBUG] Mensaje recibido:', {
+            contentLength: content?.length,
+            hasSignature: !!signature,
+            hasPublicKey: !!publicKey,
+            roomId,
+            nickname
+        });
+
+        // Validate message content (encrypted)
         const validation = validateMessageContent(content);
         if (!validation.valid) {
             return callback({
@@ -80,27 +97,32 @@ export async function handleSendMessage(socket, data, callback, io) {
         // Get user IP
         const userIP = socket.handshake.address;
 
-        // Save message to database (content comes encrypted from client)
+        // Save message to database (content is encrypted - E2EE)
+        // ⚠️ IMPORTANTE: El servidor NUNCA desencripta el contenido
+        console.log('[DEBUG] Guardando mensaje en BD...');
         const result = await saveMessage({
             roomId,
             username: nickname,
             userIP,
-            content
+            content // Contenido encriptado
         });
+        console.log('[DEBUG] Mensaje guardado con ID:', result.messageId);
 
-        // Build message data
+        // Build message data (incluye firma y clave pública para E2EE)
         const messageData = buildMessageData(
             result.messageId,
             nickname,
             content,
-            result.timestamp
+            result.timestamp,
+            signature,
+            publicKey
         );
 
-        // Broadcast to all users in room
+        // Broadcast to all users in room (mensaje encriptado + firma)
         broadcastMessage(io, roomId, messageData);
 
         // Audit log
-        console.log(`[AUDIT] Message sent: room=${roomId}, hashedNickname=${nickname}, messageId=${result.messageId}`);
+        console.log(`[AUDIT] 🔒 Encrypted message sent: room=${roomId}, hashedNickname=${nickname}, messageId=${result.messageId}, signed=${!!signature}`);
 
         callback({
             success: true,

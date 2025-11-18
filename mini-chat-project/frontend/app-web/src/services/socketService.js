@@ -124,10 +124,18 @@ class SocketService {
 
     /**
      * Envía un mensaje de texto.
-     * @param {string} content
+     * @param {string} content - Contenido del mensaje (encriptado)
+     * @param {string} signature - Firma digital del mensaje
+     * @param {string} publicKey - Clave pública RSA en formato Base64
      */
-    sendMessage(content) {
-        return this.request('send-message', { content });
+    sendMessage(content, signature = null, publicKey = null) {
+        const data = { content };
+        
+        // Agregar firma y clave pública si están disponibles
+        if (signature) data.signature = signature;
+        if (publicKey) data.publicKey = publicKey;
+        
+        return this.request('send-message', data);
         // Esto devuelve: { success: true, messageId, timestamp }
     }
 
