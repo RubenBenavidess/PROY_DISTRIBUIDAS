@@ -105,10 +105,10 @@ class CryptoService {
             combined.set(new Uint8Array(ciphertext), iv.length);
 
             const encrypted = this.arrayBufferToBase64(combined.buffer);
-            console.log('[Crypto] Mensaje encriptado');
-            return encryptedMessage;
+            console.log('🔒 [Crypto] Mensaje encriptado');
+            return encrypted;
         } catch (error) {
-            console.error('[Crypto] Error encriptando mensaje:', error);
+            console.error('❌ [Crypto] Error encriptando mensaje:', error);
             throw error;
         }
     }

@@ -32,7 +32,15 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 # --- Copia de artefactos desde la etapa 'builder' ---
 
-COPY --from=builder --chown=appuser:appgroup /app/ ./
+COPY --from=builder /app/ ./
+
+# Asegurar permisos de lectura en el directorio de claves ANTES de cambiar de usuario
+# Usar condicional para evitar errores si no existen archivos
+RUN if [ -d "keys" ]; then \
+        chmod -R 755 keys; \
+        find keys -type f -exec chmod 644 {} \; ; \
+    fi && \
+    chown -R appuser:appgroup .
 
 # Configura el contenedor para que se ejecute como el usuario 'appuser'.
 USER appuser
