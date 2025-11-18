@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRoomStore } from '../store/roomStore';
 import { socketService } from '../services/socketService';
@@ -15,6 +15,7 @@ const ChatRoomPage = () => {
     // Saca toda la data del "cerebro" (roomStore)
     const roomInfo = useRoomStore((state) => state.roomInfo);
     const messages = useRoomStore((state) => state.messages);
+    const participants = useRoomStore((state) => state.participants);
     const nickname = useRoomStore((state) => state.nickname);
     const hashedNickname = useRoomStore((state) => state.hashedNickname);
     const sessionId = useRoomStore((state) => state.sessionId);
@@ -22,7 +23,21 @@ const ChatRoomPage = () => {
     
     // Leemos las acciones (funciones) del store
     const addMessage = useRoomStore((state) => state.addMessage);
+    const setParticipants = useRoomStore((state) => state.setParticipants);
     const clearRoom = useRoomStore((state) => state.clearRoom);
+
+    // --- Función para cargar participantes ---
+    const loadParticipants = useCallback(async () => {
+        try {
+            const response = await socketService.getParticipants();
+            if (response.success) {
+                setParticipants(response.participants || []);
+                console.log('Participantes cargados:', response.participants);
+            }
+        } catch (err) {
+            console.error('Error cargando participantes:', err);
+        }
+    }, [setParticipants]);
 
     // --- VERIFICAR SI TENEMOS DATOS VÁLIDOS ---
     useEffect(() => {
@@ -47,6 +62,20 @@ const ChatRoomPage = () => {
             addMessage(fileMsg);
         };
 
+        // Manejar cuando un usuario se une
+        const handleUserJoined = (data) => {
+            console.log('Usuario se unió:', data);
+            // Recargar lista de participantes
+            loadParticipants();
+        };
+
+        // Manejar cuando un usuario se va
+        const handleUserLeft = (data) => {
+            console.log('Usuario salió:', data);
+            // Recargar lista de participantes
+            loadParticipants();
+        };
+
         // Manejar desconexión del servidor
         const handleDisconnect = (reason) => {
             // Solo mostrar mensaje si fue desconectado por el servidor
@@ -64,15 +93,22 @@ const ChatRoomPage = () => {
         
         socketService.listen('new-message', handleNewMessage);
         socketService.listen('new-file', handleNewFile);
+        socketService.listen('user-joined', handleUserJoined);
+        socketService.listen('user-left', handleUserLeft);
         socketService.onDisconnect(handleDisconnect);
+
+        // Cargar participantes al montar
+        loadParticipants();
 
         // --- Función de LIMPIEZA ---
         return () => {
             socketService.stopListening('new-message', handleNewMessage);
             socketService.stopListening('new-file', handleNewFile);
+            socketService.stopListening('user-joined', handleUserJoined);
+            socketService.stopListening('user-left', handleUserLeft);
             socketService.offDisconnect();
         };
-    }, [roomInfo, sessionId, addMessage, clearRoom, navigate]);
+    }, [roomInfo, sessionId, addMessage, clearRoom, navigate, loadParticipants]);
 
     // --- EFECTO 2: Scroll automático al fondo ---
     useEffect(() => {
@@ -170,13 +206,22 @@ const ChatRoomPage = () => {
 
         {/* Columna 2: Detalles (Tu Spec - Solo Desktop) */}
         <aside className="details-column">
-            <h3>Usuarios Conectados</h3>
+            <h3>Usuarios Conectados ({participants.length})</h3>
             <div className="participants-list">
-                {/* Tu usuario */}
-                <div className="participant-item">
-                    <span className="participant-name">{nickname}</span>
-                    <span className="participant-badge">Tú</span>
-                </div>
+                {participants.map((participant, index) => {
+                    const isMe = participant.hashedUsername === hashedNickname;
+                    return (
+                        <div key={index} className="participant-item">
+                            <span className="participant-name">
+                                {isMe ? nickname : `Usuario ${participant.hashedUsername.substring(0, 6)}`}
+                            </span>
+                            {isMe && <span className="participant-badge">Tu</span>}
+                        </div>
+                    );
+                })}
+                {participants.length === 0 && (
+                    <p className="no-participants">Cargando participantes...</p>
+                )}
             </div>
             
             {showAttachButton && (

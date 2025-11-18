@@ -188,6 +188,14 @@
   font-style: italic;
 }
 
+.no-participants {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 1rem 0;
+  font-style: italic;
+}
+
 .user-list-placeholder p {
   background-color: var(--bg-tertiary);
   padding: 10px 14px;

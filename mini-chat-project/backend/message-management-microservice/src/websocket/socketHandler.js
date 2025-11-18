@@ -151,7 +151,7 @@ function setupHandlers() {
     io.on('connection', (socket) => {
         console.log(`[WS] Client connected: ${socket.id}`);
         
-        // Enforce single connection per IP
+        // Enforce single connection per IP 
         if (!enforceIPLimit(socket)) {
             socket.disconnect(true);
             return;
@@ -161,7 +161,7 @@ function setupHandlers() {
             await handleJoinRoom(socket, data, callback);
         });
 
-        socket.on('get-participants', (callback) => {
+        socket.on('get-participants', (data, callback) => {
             handleGetParticipants(socket, callback);
         });
 
